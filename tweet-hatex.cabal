@@ -18,6 +18,12 @@ executable tweet-hatex
                      , twitter-types
                      , HaTeX
                      , conduit
+                     , network-uri
+                     , containers
+                     , case-insensitive
+                     , lens
+                     , transformers-base
+                     , monad-logger
                      , authenticate-oauth >=1.4
                      , bytestring >=0.10
                      , conduit >= 1.0
