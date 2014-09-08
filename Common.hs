@@ -8,17 +8,17 @@ import qualified Data.ByteString.Char8 as S8
 import qualified Data.CaseInsensitive as CI
 import qualified Data.Configurator as Conf
 
-import Web.Twitter.Conduit (TW, setCredential, twProxy, runTW)
-import System.Environment (getEnvironment)
+import Control.Applicative ((<$>), (<|>), (<*>))
 import Control.Lens
-import Control.Applicative
 import Control.Monad.Base
 import Control.Monad.IO.Class
-import Control.Monad.Trans.Resource
 import Control.Monad.Logger
-import Network.HTTP.Conduit (Proxy(..))
+import Control.Monad.Trans.Resource (ResourceT, MonadBaseControl)
 import Data.Configurator.Types (Config)
-import Web.Authenticate.OAuth (OAuth(..), Credential, newOAuth, newCredential, signOAuth)
+import Network.HTTP.Conduit (Proxy(..))
+import System.Environment (getEnvironment)
+import Web.Authenticate.OAuth (OAuth(..), Credential, newOAuth, newCredential)
+import Web.Twitter.Conduit (TW, setCredential, twProxy, runTW)
 
 getProxyEnv :: IO (Maybe Proxy)
 getProxyEnv = do
