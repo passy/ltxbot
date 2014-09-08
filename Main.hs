@@ -10,7 +10,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Text.Encoding as TE
 
-import Common (getOAuthTokens, runTwitterFromEnv')
+import Common (runTwitterFromEnv')
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.Trans.Resource (ResourceT)
 import Control.Monad.IO.Class (liftIO)
@@ -31,13 +31,11 @@ main :: IO ()
 main = do
     [confFile] <- getArgs
     conf <- Conf.load [Conf.Required confFile]
-    (oauth, cred) <- getOAuthTokens conf
 
     runTwitterFromEnv' conf $ do
         src <- stream userstream
         src C.$$+- CL.mapM_ (^! act (liftIO . printTL))
 
-    _ <- postTweet oauth cred "hello horse"
     return ()
 
 printTL ::
