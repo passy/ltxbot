@@ -3,18 +3,26 @@ module Main where
 
 import Prelude
 
+import qualified Data.Conduit as C
+import qualified Data.Conduit.List as CL
 import qualified Data.Configurator as Conf
 import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import qualified Data.Text.Encoding as TE
 
-import System.Environment (getArgs)
+import Common (getOAuthTokens, runTwitterFromEnv')
 import Control.Monad.Catch (MonadThrow)
 import Control.Monad.Trans.Resource (ResourceT)
+import Control.Monad.IO.Class (liftIO)
+import Control.Lens
 import Data.ByteString (ByteString)
 import Data.Conduit (ResumableSource)
 import Network.HTTP.Conduit (parseUrl, withManager, http, urlEncodedBody, Request, Response)
+import System.Environment (getArgs)
 import Web.Authenticate.OAuth (OAuth(..), Credential, signOAuth)
-import Common (getOAuthTokens)
+import Web.Twitter.Conduit (stream, userstream)
+import Web.Twitter.Types (StreamingAPI(..))
+import Web.Twitter.Types.Lens (AsStatus(..), userScreenName)
 
 statusesUrl :: String
 statusesUrl = "https://api.twitter.com/1.1/statuses/update.json"
@@ -25,8 +33,24 @@ main = do
     conf <- Conf.load [Conf.Required confFile]
     (oauth, cred) <- getOAuthTokens conf
 
+    runTwitterFromEnv' conf $ do
+        src <- stream userstream
+        src C.$$+- CL.mapM_ (^! act (liftIO . printTL))
+
     _ <- postTweet oauth cred "hello horse"
     return ()
+
+printTL ::
+    StreamingAPI ->
+    IO ()
+printTL (SStatus s) = T.putStrLn $ showStatus s
+printTL _ = T.putStrLn "Other event"
+
+showStatus :: AsStatus s => s -> T.Text
+showStatus s = T.concat [ s ^. user . userScreenName
+                        , ":"
+                        , s ^. text
+                        ]
 
 postTweet ::
     OAuth ->
