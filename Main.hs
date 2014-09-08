@@ -20,7 +20,7 @@ import Data.Conduit (ResumableSource)
 import Network.HTTP.Conduit (parseUrl, withManager, http, urlEncodedBody, Request, Response)
 import System.Environment (getArgs)
 import Web.Authenticate.OAuth (OAuth(..), Credential, signOAuth)
-import Web.Twitter.Conduit (stream, userstream)
+import Web.Twitter.Conduit (stream, userstream, statusesFilterByTrack)
 import Web.Twitter.Types (StreamingAPI(..))
 import Web.Twitter.Types.Lens (AsStatus(..), userScreenName)
 
@@ -33,7 +33,7 @@ main = do
     conf <- Conf.load [Conf.Required confFile]
 
     runTwitterFromEnv' conf $ do
-        src <- stream userstream
+        src <- stream $ statusesFilterByTrack "@steampain"
         src C.$$+- CL.mapM_ (^! act (liftIO . printTL))
 
     return ()
