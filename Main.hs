@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, FlexibleContexts #-}
 module Main where
 
 import Prelude
@@ -10,10 +10,12 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import Common (runTwitterFromEnv')
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class (liftIO, MonadIO(..))
+import Control.Monad.Trans.Resource (MonadResource)
+import Control.Monad.Logger (MonadLogger)
 import Control.Lens
 import System.Environment (getArgs)
-import Web.Twitter.Conduit (stream, statusesFilterByTrack)
+import Web.Twitter.Conduit (stream, statusesFilterByTrack, MediaData(..), updateWithMedia, call, TW)
 import Web.Twitter.Types (StreamingAPI(..))
 import Web.Twitter.Types.Lens (AsStatus(..), userScreenName)
 
@@ -42,3 +44,9 @@ showStatus s = T.concat [ s ^. user . userScreenName
                         , ":"
                         , s ^. text
                         ]
+
+updateStatusWithImage :: (MonadLogger m, MonadResource m) => String -> FilePath -> TW m ()
+updateStatusWithImage status filepath = do
+    res <- call $ updateWithMedia (T.pack status) (MediaFromFile filepath)
+    liftIO $ print res
+    return ()
