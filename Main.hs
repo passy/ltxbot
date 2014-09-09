@@ -10,15 +10,17 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import Common (runTwitterFromEnv')
--- import Latex (renderLaTeXToFile)
+import Latex (renderLaTeXToFile)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Control.Monad.Trans.Resource (MonadResource)
 import Control.Monad.Logger (MonadLogger)
 import Control.Lens
 import System.Environment (getArgs)
+import System.IO.Temp (withSystemTempFile)
 import Web.Twitter.Conduit (stream, statusesFilterByTrack, MediaData(..), updateWithMedia, call, TW, inReplyToStatusId, update)
 import Web.Twitter.Types (StreamingAPI(..), Status(..))
 import Web.Twitter.Types.Lens (AsStatus(..), userScreenName)
+import System.Process (createProcess, shell)
 
 main :: IO ()
 main = do
@@ -32,36 +34,39 @@ main = do
 
     runTwitterFromEnv' conf $ do
         src <- stream $ statusesFilterByTrack username
-        src C.$$+- CL.mapM_ (^! act printTL)
+        src C.$$+- CL.mapM_ (^! act actTL)
 
     return ()
 
--- TODO: That's not at all what it does now.
-printTL ::
+actTL ::
     (MonadLogger m, MonadResource m) =>
     StreamingAPI ->
     TW m ()
-printTL (SStatus s) = do
+actTL (SStatus s) = do
     liftIO $ T.putStrLn $ showStatus s
-    replyToStatus s
-printTL _ = liftIO $ T.putStrLn "Other event"
+    liftIO $ withSystemTempFile "hatextmp.tex" (\ tmpFile _ -> do
+        renderLaTeXToFile (s ^. text) tmpFile
+        createProcess $ (shell $ "doesntexist"))
+    replyToStatus "hello world" s
+actTL _ = liftIO $ T.putStrLn "Other event"
 
 showStatus ::
     AsStatus s =>
     s ->
     T.Text
 showStatus s = T.concat [ s ^. user . userScreenName
-                        , ":"
+                        , ": "
                         , s ^. text
                         ]
 
 replyToStatus ::
     (MonadLogger m, MonadResource m) =>
+    T.Text ->
     Status ->
     TW m ()
-replyToStatus s = do
+replyToStatus t s = do
     -- TODO: Do something with res, don't return ()
-    _ <- call $ update (T.concat ["@", s ^. user . userScreenName, " Hello World"]) & inReplyToStatusId ?~ (statusId s)
+    _ <- call $ update (T.concat ["@", s ^. user . userScreenName, " ", t]) & inReplyToStatusId ?~ statusId s
     return ()
 
 updateStatusWithImage ::

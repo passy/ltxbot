@@ -33,6 +33,8 @@ executable tweet-hatex
                      , resourcet >= 0.4
                      , text >= 1.1
                      , transformers >= 0.3
+                     , temporary
+                     , process
   default-language:    Haskell2010
   Ghc-options:         -Wall
                        -fwarn-tabs
