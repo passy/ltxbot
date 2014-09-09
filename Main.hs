@@ -44,9 +44,11 @@ actTL ::
     TW m ()
 actTL (SStatus s) = do
     liftIO $ T.putStrLn $ showStatus s
-    liftIO $ withSystemTempFile "hatextmp.tex" (\ tmpFile _ -> do
+    _ <- liftIO $ withSystemTempFile "hatextmp.tex" (\ tmpFile _ -> do
+        -- Yuck, this is state, global state even. Let's figure out
+        -- if this can be piped through stdin.
         renderLaTeXToFile (s ^. text) tmpFile
-        createProcess $ (shell $ "doesntexist"))
+        createProcess (shell $ "cat " ++ tmpFile))
     replyToStatus "hello world" s
 actTL _ = liftIO $ T.putStrLn "Other event"
 

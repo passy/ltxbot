@@ -41,3 +41,5 @@ executable tweet-hatex
                        -fwarn-incomplete-record-updates
                        -fwarn-monomorphism-restriction
                        -fwarn-unused-do-bind
+                       -auto-all
+                       -caf-all
