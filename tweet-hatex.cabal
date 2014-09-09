@@ -39,4 +39,3 @@ executable tweet-hatex
                        -fwarn-incomplete-record-updates
                        -fwarn-monomorphism-restriction
                        -fwarn-unused-do-bind
-                       -fwarn-implicit-prelude
