@@ -17,6 +17,7 @@ import Control.Monad.Logger (MonadLogger)
 import Control.Lens
 import System.Environment (getArgs)
 import System.IO.Temp (withSystemTempFile)
+import System.IO (hFlush)
 import Web.Twitter.Conduit (stream, statusesFilterByTrack, MediaData(..), updateWithMedia, call, TW, inReplyToStatusId, update)
 import Web.Twitter.Types (StreamingAPI(..), Status(..))
 import Web.Twitter.Types.Lens (AsStatus(..), userScreenName)
@@ -44,10 +45,13 @@ actTL ::
     TW m ()
 actTL (SStatus s) = do
     liftIO $ T.putStrLn $ showStatus s
-    _ <- liftIO $ withSystemTempFile "hatextmp.tex" (\ tmpFile _ -> do
+    _ <- liftIO $ withSystemTempFile "hatextmp.tex" (\ tmpFile tmpHandle -> do
         -- Yuck, this is state, global state even. Let's figure out
         -- if this can be piped through stdin.
         renderLaTeXToFile (s ^. text) tmpFile
+        hFlush tmpHandle
+        putStrLn tmpFile
+        _ <- getLine
         createProcess (shell $ "cat " ++ tmpFile))
     replyToStatus "hello world" s
 actTL _ = liftIO $ T.putStrLn "Other event"
