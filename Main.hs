@@ -10,10 +10,12 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import Common (runTwitterFromEnv')
-import Latex (renderLaTeXToFile)
+import Latex (renderLaTeXToFile, standaloneLaTeX)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Control.Monad.Trans.Resource (MonadResource)
 import Control.Monad.Logger (MonadLogger)
+import Control.Monad (liftM)
+import Control.Monad.Catch (MonadCatch, MonadMask)
 import Control.Lens
 import System.Environment (getArgs)
 import System.IO.Temp (withSystemTempFile)
@@ -21,7 +23,7 @@ import System.IO (hFlush)
 import Web.Twitter.Conduit (stream, statusesFilterByTrack, MediaData(..), updateWithMedia, call, TW, inReplyToStatusId, update)
 import Web.Twitter.Types (StreamingAPI(..), Status(..))
 import Web.Twitter.Types.Lens (AsStatus(..), userScreenName)
-import System.Process (createProcess, shell)
+import System.Process (createProcess, shell, waitForProcess, proc)
 
 main :: IO ()
 main = do
@@ -40,20 +42,25 @@ main = do
     return ()
 
 actTL ::
-    (MonadLogger m, MonadResource m) =>
+    (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>
     StreamingAPI ->
     TW m ()
 actTL (SStatus s) = do
     liftIO $ T.putStrLn $ showStatus s
-    _ <- liftIO $ withSystemTempFile "hatextmp.tex" (\ tmpFile tmpHandle -> do
+    withSystemTempFile "hatmp.tex" (\ tmpFile tmpHandle -> do
         -- Yuck, this is state, global state even. Let's figure out
         -- if this can be piped through stdin.
-        renderLaTeXToFile (s ^. text) tmpFile
-        hFlush tmpHandle
-        putStrLn tmpFile
-        _ <- getLine
-        createProcess (shell $ "cat " ++ tmpFile))
-    replyToStatus "hello world" s
+        _ <- liftIO $ do
+            renderLaTeXToFile tmpFile (standaloneLaTeX (s ^. text))
+            hFlush tmpHandle
+            (_, _, _, ph) <- createProcess (proc "./docker-tex2png.sh" [tmpFile])
+            waitForProcess ph
+        replyStatusWithImage s (replaceTexWithPng tmpFile))
+    where
+        -- Should only replace the file ending, there's probably a
+        -- way of only getting the base name, but should suffice for now.
+        replaceTexWithPng :: FilePath -> FilePath
+        replaceTexWithPng = T.unpack . (T.replace ".tex" ".png") . T.pack
 actTL _ = liftIO $ T.putStrLn "Other event"
 
 showStatus ::
@@ -65,22 +72,17 @@ showStatus s = T.concat [ s ^. user . userScreenName
                         , s ^. text
                         ]
 
-replyToStatus ::
+replyStatusWithImage ::
     (MonadLogger m, MonadResource m) =>
-    T.Text ->
     Status ->
-    TW m ()
-replyToStatus t s = do
-    -- TODO: Do something with res, don't return ()
-    _ <- call $ update (T.concat ["@", s ^. user . userScreenName, " ", t]) & inReplyToStatusId ?~ statusId s
-    return ()
-
-updateStatusWithImage ::
-    (MonadLogger m, MonadResource m) =>
-    String ->
     FilePath ->
     TW m ()
-updateStatusWithImage status filepath = do
-    res <- call $ updateWithMedia (T.pack status) (MediaFromFile filepath)
+replyStatusWithImage status filepath = do
+    -- TODO: Do something with res, don't return ()
+    res <- call $ updateCall
     liftIO $ print res
     return ()
+    where
+        statusString = (T.concat ["@", status ^. user . userScreenName])
+        media = MediaFromFile filepath
+        updateCall = updateWithMedia statusString media & inReplyToStatusId ?~ statusId status
