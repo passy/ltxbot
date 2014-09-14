@@ -14,16 +14,15 @@ import Latex (renderLaTeXToFile, standaloneLaTeX)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Control.Monad.Trans.Resource (MonadResource)
 import Control.Monad.Logger (MonadLogger)
-import Control.Monad (liftM)
 import Control.Monad.Catch (MonadCatch, MonadMask)
 import Control.Lens
 import System.Environment (getArgs)
 import System.IO.Temp (withSystemTempFile)
-import System.IO (hFlush)
-import Web.Twitter.Conduit (stream, statusesFilterByTrack, MediaData(..), updateWithMedia, call, TW, inReplyToStatusId, update)
+import System.IO (hFlush, hClose)
+import Web.Twitter.Conduit (stream, statusesFilterByTrack, MediaData(..), updateWithMedia, call, TW, inReplyToStatusId)
 import Web.Twitter.Types (StreamingAPI(..), Status(..))
 import Web.Twitter.Types.Lens (AsStatus(..), userScreenName)
-import System.Process (createProcess, shell, waitForProcess, proc)
+import System.Process (system)
 
 main :: IO ()
 main = do
@@ -51,10 +50,10 @@ actTL (SStatus s) = do
         -- Yuck, this is state, global state even. Let's figure out
         -- if this can be piped through stdin.
         _ <- liftIO $ do
+            hClose tmpHandle -- We can't write to the handle otherwise
             renderLaTeXToFile tmpFile (standaloneLaTeX (s ^. text))
             hFlush tmpHandle
-            (_, _, _, ph) <- createProcess (proc "./docker-tex2png.sh" [tmpFile])
-            waitForProcess ph
+            system $ unwords ["./docker-tex2png.sh", tmpFile]
         replyStatusWithImage s (replaceTexWithPng tmpFile))
     where
         -- Should only replace the file ending, there's probably a
