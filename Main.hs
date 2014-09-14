@@ -10,7 +10,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import Common (runTwitterFromEnv')
-import Latex (renderLaTeXToFile, standaloneLaTeX)
+import Latex (renderLaTeXToHandle, standaloneLaTeX)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Control.Monad.Trans.Resource (MonadResource)
 import Control.Monad.Logger (MonadLogger)
@@ -50,9 +50,8 @@ actTL (SStatus s) = do
         -- Yuck, this is state, global state even. Let's figure out
         -- if this can be piped through stdin.
         _ <- liftIO $ do
+            renderLaTeXToHandle tmpHandle (standaloneLaTeX (s ^. text))
             hClose tmpHandle -- We can't write to the handle otherwise
-            renderLaTeXToFile tmpFile (standaloneLaTeX (s ^. text))
-            hFlush tmpHandle
             system $ unwords ["./docker-tex2png.sh", tmpFile]
         replyStatusWithImage s (replaceTexWithPng tmpFile))
     where
