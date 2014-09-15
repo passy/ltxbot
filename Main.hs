@@ -18,7 +18,8 @@ import Control.Monad.Catch (MonadCatch, MonadMask)
 import Control.Lens
 import System.Environment (getArgs)
 import System.IO.Temp (withSystemTempFile)
-import System.IO (hFlush, hClose)
+import System.FilePath (replaceExtension)
+import System.IO (hClose)
 import Web.Twitter.Conduit (stream, statusesFilterByTrack, MediaData(..), updateWithMedia, call, TW, inReplyToStatusId)
 import Web.Twitter.Types (StreamingAPI(..), Status(..))
 import Web.Twitter.Types.Lens (AsStatus(..), userScreenName)
@@ -54,12 +55,7 @@ actTL (SStatus s) = do
             renderLaTeXToHandle tmpHandle (standaloneLaTeX (s ^. text))
             hClose tmpHandle -- We can't write to the handle otherwise
             system $ unwords ["./docker-tex2png.sh", tmpFile]
-        replyStatusWithImage s (replaceTexWithPng tmpFile))
-    where
-        -- Should only replace the file ending, there's probably a
-        -- way of only getting the base name, but should suffice for now.
-        replaceTexWithPng :: FilePath -> FilePath
-        replaceTexWithPng = T.unpack . (T.replace ".tex" ".png") . T.pack
+        replyStatusWithImage s (replaceExtension tmpFile ".png"))
 actTL _ = liftIO $ T.putStrLn "Other event"
 
 showStatus ::
