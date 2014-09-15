@@ -14,7 +14,7 @@ An easy way to obtain these is through
 
 ## Setup
 
-You need a reasonably recent Haskell installation (GHC 7.8.+ at the time of this
+You need a reasonably recent Haskell installation (GHC 7.8.3 at the time of this
 writing) and [Docker](https://docker.com) on your system.
 
 *Docker preparation*
