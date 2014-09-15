@@ -1,7 +1,7 @@
-name:                tweet-hatex
+name:                ltxbot
 version:             0.1.0.0
 synopsis:            Twitter Bot turning LaTeX tweets into PNGs
-homepage:            https://github.com/passy/tweet-hatex
+homepage:            https://github.com/passy/ltxbot
 license:             MIT
 license-file:        LICENSE
 author:              Pascal Hartig
@@ -10,7 +10,7 @@ category:            Web
 build-type:          Simple
 cabal-version:       >=1.10
 
-executable tweet-hatex
+executable ltxbot
   main-is:             Main.hs
   other-extensions:    OverloadedStrings, RecordWildCards
   build-depends:       base >=4.7 && <4.8
