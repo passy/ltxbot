@@ -14,7 +14,7 @@ executable ltxbot
   main-is:             Main.hs
   other-extensions:    OverloadedStrings, RecordWildCards
   build-depends:       base >=4.7 && <4.8
-                     , twitter-conduit
+                     , twitter-conduit >= 0.0.6
                      , twitter-types
                      , HaTeX
                      , conduit
@@ -31,7 +31,7 @@ executable ltxbot
                      , exceptions >= 0.5
                      , http-conduit >= 2.0
                      , resourcet >= 0.4
-                     , text >= 1.1
+                     , text >= 1.1 && < 1.2
                      , transformers >= 0.3
                      , temporary
                      , process
