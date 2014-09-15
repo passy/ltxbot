@@ -78,10 +78,10 @@ replyStatusWithImage ::
     TW m ()
 replyStatusWithImage status filepath = do
     -- TODO: Do something with res, don't return ()
-    res <- call $ updateCall
+    res <- call updateCall
     liftIO $ print res
     return ()
     where
-        statusString = (T.concat ["@", status ^. user . userScreenName])
+        statusString = T.concat ["@", status ^. user . userScreenName]
         media = MediaFromFile filepath
         updateCall = updateWithMedia statusString media & inReplyToStatusId ?~ statusId status
