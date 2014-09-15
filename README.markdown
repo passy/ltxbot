@@ -2,6 +2,8 @@
 
 A Twitter bot rendering mentions to PNGs.
 
+![Screenshot](media/screenshot.png)
+
 ## Config
 
 Modify `ltxbot.example.conf` and enter your [Twiter OAuth
