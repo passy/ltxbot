@@ -36,7 +36,7 @@ main = do
     username <- Conf.lookupDefault "" conf "userName"
 
     runTwitterFromEnv' conf $ do
-        src <- stream $ statusesFilterByTrack username
+        src <- stream $ statusesFilterByTrack $ T.concat ["@", username]
         -- TODO: Add conduit that removes mentions
         src C.$$+- CL.mapM_ (^! act actTL)
 
