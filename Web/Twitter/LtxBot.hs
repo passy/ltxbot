@@ -44,6 +44,10 @@ normalizeMentions = C.awaitForever handleStream
             C.yield $ SStatus (s & TL.statusText .~ newText)
         handleStream s@_          = C.yield s
 
+-- | Strip the entities defined by the given indices.
+stripEntities :: [TT.EntityIndices] -> T.Text -> T.Text
+stripEntities i t = t
+
 actTL ::
     (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>
     UserId ->
