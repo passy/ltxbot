@@ -45,8 +45,16 @@ normalizeMentions = C.awaitForever handleStream
         handleStream s@_          = C.yield s
 
 -- | Strip the entities defined by the given indices.
+-- Indices have to be tuples of two and most not overlap.
+-- Dependent types would be totally rad here. Also a proper EntityIndices type.
 stripEntities :: [TT.EntityIndices] -> T.Text -> T.Text
-stripEntities i t = t
+stripEntities i t =
+    snd $ foldl f (0, t) i
+    -- This function is not total due to the pattern match here
+    where
+        f :: (Int, T.Text) -> TT.EntityIndices -> (Int, T.Text)
+        f (offset, t') [a, b] = ((b - a + 1), (T.take (b - offset) . T.drop (a - offset)) t')
+        f (_, _) _ = error "Invalid entity indices"
 
 actTL ::
     (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>
