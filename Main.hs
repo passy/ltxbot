@@ -34,6 +34,6 @@ main = do
     runTwitterFromEnv' conf $ do
         src <- stream $ statusesFilterByTrack $ T.concat ["@", username]
         -- TODO: Add conduit that removes mentions
-        src C.$$+- CL.mapM_ (^! act (actTL $ fromJust userId))
+        src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act (actTL $ fromJust userId))
 
     return ()

@@ -26,7 +26,7 @@ import System.Process (system)
 import Data.Maybe (maybeToList)
 
 normalizeMentions :: Monad m => C.Conduit StreamingAPI m StreamingAPI
-normalizeMentions = C.await >>= maybe (return ()) C.yield
+normalizeMentions = C.awaitForever C.yield
 
 actTL ::
     (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>
