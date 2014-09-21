@@ -9,6 +9,7 @@ import qualified Data.Configurator as Conf
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
+import Fixture
 import Common (runTwitterFromEnv')
 import Latex (renderLaTeXToHandle, standaloneLaTeX)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
