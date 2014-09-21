@@ -25,8 +25,24 @@ import Web.Twitter.Types (StreamingAPI(..), Status(..), UserId)
 import System.Process (system)
 import Data.Maybe (maybeToList)
 
-normalizeMentions :: Monad m => C.Conduit StreamingAPI m StreamingAPI
-normalizeMentions = C.awaitForever C.yield
+-- | Remove all mentions from StreamingAPI SStatus messages
+-- so that this bot doesn't have to deal with it further down the line.
+normalizeMentions :: (MonadIO m) => C.Conduit StreamingAPI m StreamingAPI
+normalizeMentions = C.awaitForever handleStream
+    where
+        handleStream (SStatus s) = do
+            let text = s ^. TL.statusText
+            -- WIZARDRY!
+            let mentions = s ^.. TL.statusEntities
+                             . _Just
+                             . TL.enUserMentions
+                             . traverse
+                             . TL.entityIndices
+            -- TODO: Strip out the mentions. Can't think of a good algorithm
+            -- right now ... Too tired.
+            let newText = foldl (const . id) text []
+            C.yield $ SStatus (s & TL.statusText .~ newText)
+        handleStream s@_          = C.yield s
 
 actTL ::
     (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>
