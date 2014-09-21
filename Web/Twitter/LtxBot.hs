@@ -42,10 +42,10 @@ normalizeMentions = C.awaitForever handleStream
             -- right now ... Too tired.
             let newText = foldl (const . id) text []
             C.yield $ SStatus (s & TL.statusText .~ newText)
-        handleStream s@_          = C.yield s
+        handleStream s@_ = C.yield s
 
 -- | Strip the entities defined by the given indices.
--- Indices have to be tuples of two and most not overlap.
+-- Indices have to be tuples of two, must be in order and most not overlap.
 -- Dependent types would be totally rad here. Also a proper EntityIndices type.
 stripEntities :: [TT.EntityIndices] -> T.Text -> T.Text
 stripEntities i t =
@@ -53,7 +53,10 @@ stripEntities i t =
     -- This function is not total due to the pattern match here
     where
         f :: (Int, T.Text) -> TT.EntityIndices -> (Int, T.Text)
-        f (offset, t') [a, b] = ((b - a + 1), (T.take (b - offset) . T.drop (a - offset)) t')
+        f (offset, t') [a, b] = ((b - a + 1), T.concat [
+            T.take (b - offset) t'
+          , ((T.drop (b - a - offset)) . (T.take (b - offset))) t'
+          , T.takeEnd (b - offset) t'])
         f (_, _) _ = error "Invalid entity indices"
 
 actTL ::
