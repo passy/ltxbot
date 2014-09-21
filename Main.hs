@@ -12,7 +12,7 @@ import qualified Data.Text.IO as T
 import Fixture
 import Common (runTwitterFromEnv')
 import Latex (renderLaTeXToHandle, standaloneLaTeX)
-import Control.Monad (liftM)
+import Control.Monad (liftM, join)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Control.Monad.Trans.Resource (MonadResource)
 import Control.Monad.Logger (MonadLogger)
@@ -26,6 +26,7 @@ import Web.Twitter.Conduit (stream, statusesFilterByTrack, MediaData(..), update
 import Web.Twitter.Types (StreamingAPI(..), Status(..))
 import qualified Web.Twitter.Types.Lens as TL -- (AsStatus(..), userScreenName)
 import System.Process (system)
+import Data.Maybe (maybeToList)
 
 main :: IO ()
 main = do
@@ -93,11 +94,8 @@ replyStatusWithImage status filepath = do
 extractStatusMentions :: Status -> [TL.UserEntity]
 extractStatusMentions s = do
     -- Should be obvious that this needs to be refactored ...
+    -- I'm sure there's a way to do all of this in a single combined
+    -- lens operation
     let ues = s ^. TL.statusEntities >>= (^? TL.enUserMentions)
-
-    -- This should be just flattening two functors into one.
-    -- liftM is already better, but I still want to combine the two lines
-    -- into a lens operation.
-    case liftM (fmap (^. TL.entityBody)) ues of
-        Just n  -> n
-        Nothing -> []
+    let mentions = liftM (fmap (^. TL.entityBody)) ues
+    join $ maybeToList mentions
