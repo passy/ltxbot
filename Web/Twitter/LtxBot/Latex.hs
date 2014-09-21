@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Latex
+module Web.Twitter.LtxBot.Latex
   (renderLaTeXToHandle, standaloneLaTeX)
 where
 

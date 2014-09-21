@@ -44,3 +44,33 @@ executable ltxbot
                        -fwarn-unused-do-bind
                        -auto-all
                        -caf-all
+
+test-suite spec_main
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      Tests, .
+  main-is:             Main.hs
+  default-language:    Haskell2010
+  build-depends:       base >=4.7 && <4.8
+                     , twitter-conduit >= 0.0.6
+                     , twitter-types
+                     , HaTeX
+                     , conduit
+                     , network-uri
+                     , containers
+                     , case-insensitive
+                     , lens
+                     , transformers-base
+                     , monad-logger
+                     , authenticate-oauth >=1.4
+                     , bytestring >=0.10
+                     , conduit >= 1.0
+                     , configurator >= 0.2
+                     , exceptions >= 0.5
+                     , http-conduit >= 2.0
+                     , resourcet >= 0.4
+                     , text >= 1.1 && < 1.2
+                     , transformers >= 0.3
+                     , temporary
+                     , filepath
+                     , process
+                     , hspec

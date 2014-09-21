@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Fixture where
+module Fixtures where
 
 import Web.Twitter.Types
 

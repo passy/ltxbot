@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
-module Common where
+module Web.Twitter.LtxBot.Common where
 
 import qualified Web.Authenticate.OAuth as OA
 import qualified Network.URI as URI
