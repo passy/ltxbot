@@ -12,6 +12,7 @@ import qualified Data.Text.IO as T
 import Fixture
 import Common (runTwitterFromEnv')
 import Latex (renderLaTeXToHandle, standaloneLaTeX)
+import Control.Monad (liftM)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Control.Monad.Trans.Resource (MonadResource)
 import Control.Monad.Logger (MonadLogger)
@@ -95,8 +96,8 @@ extractStatusMentions s = do
     let ues = s ^. TL.statusEntities >>= (^? TL.enUserMentions)
 
     -- This should be just flattening two functors into one.
-    -- The (ues >>= return) is stupid too. There's probably a lens operation
-    -- for this.
-    case ues >>= return . (fmap (^. TL.entityBody)) of
+    -- liftM is already better, but I still want to combine the two lines
+    -- into a lens operation.
+    case liftM (fmap (^. TL.entityBody)) ues of
         Just n  -> n
         Nothing -> []
