@@ -22,7 +22,7 @@ import System.FilePath (replaceExtension)
 import System.IO (hClose)
 import Web.Twitter.Conduit (stream, statusesFilterByTrack, MediaData(..), updateWithMedia, call, TW, inReplyToStatusId)
 import Web.Twitter.Types (StreamingAPI(..), Status(..))
-import Web.Twitter.Types.Lens (AsStatus(..), userScreenName)
+import qualified Web.Twitter.Types.Lens as TL -- (AsStatus(..), userScreenName)
 import System.Process (system)
 
 main :: IO ()
@@ -46,25 +46,30 @@ actTL ::
     (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>
     StreamingAPI ->
     TW m ()
-actTL (SStatus s) = do
+actTL (SStatus s) = actStatus s
+actTL _ = liftIO $ T.putStrLn "Other event"
+
+actStatus :: (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>
+    Status ->
+    TW m ()
+actStatus s = do
     liftIO $ T.putStrLn $ showStatus s
     withSystemTempFile "hatmp.tex" (\ tmpFile tmpHandle -> do
         -- Yuck, this is state, global state even. Let's figure out
         -- if this can be piped through stdin.
         _ <- liftIO $ do
-            renderLaTeXToHandle tmpHandle (standaloneLaTeX (s ^. text))
+            renderLaTeXToHandle tmpHandle (standaloneLaTeX (s ^. TL.text))
             hClose tmpHandle -- We can't write to the handle otherwise
             system $ unwords ["./docker-tex2png.sh", tmpFile]
         replyStatusWithImage s (replaceExtension tmpFile ".png"))
-actTL _ = liftIO $ T.putStrLn "Other event"
 
 showStatus ::
-    AsStatus s =>
+    TL.AsStatus s =>
     s ->
     T.Text
-showStatus s = T.concat [ s ^. user . userScreenName
+showStatus s = T.concat [ s ^. TL.user . TL.userScreenName
                         , ": "
-                        , s ^. text
+                        , s ^. TL.text
                         ]
 
 replyStatusWithImage ::
@@ -78,6 +83,19 @@ replyStatusWithImage status filepath = do
     liftIO $ print res
     return ()
     where
-        statusString = T.concat ["@", status ^. user . userScreenName]
+        statusString = T.concat ["@", status ^. TL.user . TL.userScreenName]
         media = MediaFromFile filepath
         updateCall = updateWithMedia statusString media & inReplyToStatusId ?~ statusId status
+
+
+extractStatusMentions :: Status -> [TL.UserEntity]
+extractStatusMentions s = do
+    -- Should be obvious that this needs to be refactored ...
+    let ues = s ^. TL.statusEntities >>= (^? TL.enUserMentions)
+
+    -- This should be just flattening two functors into one.
+    -- The (ues >>= return) is stupid too. There's probably a lens operation
+    -- for this.
+    case ues >>= return . (fmap (^. TL.entityBody)) of
+        Just n  -> n
+        Nothing -> []
