@@ -38,11 +38,23 @@ normalizeMentions = C.awaitForever handleStream
                              . TL.enUserMentions
                              . traverse
                              . TL.entityIndices
-            -- TODO: Strip out the mentions. Can't think of a good algorithm
-            -- right now ... Too tired.
-            let newText = foldl (const . id) text []
+            let newText = stripEntities mentions text
             C.yield $ SStatus (s & TL.statusText .~ newText)
-        handleStream s@_          = C.yield s
+        handleStream s@_ = C.yield s
+
+-- | Strip the entities defined by the given indices.
+-- Indices have to be tuples of two, must be in order and most not overlap.
+-- Dependent types would be totally rad here. Also a proper EntityIndices type.
+stripEntities :: [TT.EntityIndices] -> T.Text -> T.Text
+stripEntities i t =
+    snd $ foldl f (0, t) i
+    -- This function is not total due to the pattern match here
+    where
+        f :: (Int, T.Text) -> TT.EntityIndices -> (Int, T.Text)
+        f (offset, t') [a, b] | a <= b = (
+            b - a + 1,
+            T.take (a - offset) t' `T.append` T.drop (b + 1 - offset) t')
+        f (_, _) _ = error "Invalid entity indices"
 
 actTL ::
     (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>

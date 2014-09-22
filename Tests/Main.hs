@@ -6,7 +6,7 @@ import Fixtures (testStatus)
 
 import Control.Applicative ((<$>))
 import Control.Lens.Operators ((^.))
-import Web.Twitter.LtxBot (extractStatusMentions)
+import Web.Twitter.LtxBot (extractStatusMentions, stripEntities)
 
 import qualified Web.Twitter.Types.Lens as TL
 
@@ -19,3 +19,16 @@ main = hspec $ do
           let screenNames = (\m -> m ^. TL.userEntityUserScreenName) <$> mentions
 
           screenNames `shouldBe` ["ltxbot", "passy"]
+
+    describe "stripEntities" $ do
+        it "should leading entities from a string" $ do
+            let text = "not a test"
+            let indices = [[0, 3]]
+
+            stripEntities indices text `shouldBe` "a test"
+
+        it "should remove entities from a string" $ do
+            let text = "this is a test string"
+            let indices = [[5, 7], [8, 8], [9, 9], [14, 20]]
+
+            stripEntities indices text `shouldBe` "this test"
