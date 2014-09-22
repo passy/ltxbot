@@ -47,14 +47,14 @@ normalizeMentions = C.awaitForever handleStream
 -- Dependent types would be totally rad here. Also a proper EntityIndices type.
 stripEntities :: [TT.EntityIndices] -> T.Text -> T.Text
 stripEntities i t =
-    snd $ foldl f (0, t) i
-    -- This function is not total due to the pattern match here
+    -- Read this backwards: Create a string annotated with its index,
+    -- then filter by the ranges of characters to exclude and put it back
+    -- together.
+    T.pack $ fmap snd $ filter (\e -> not $ fst e `elem` ranges) $ zip [0..] (T.unpack t)
     where
-        f :: (Int, T.Text) -> TT.EntityIndices -> (Int, T.Text)
-        f (offset, t') [a, b] | a <= b = (
-            b - a + 1,
-            T.take (a - offset) t' `T.append` T.drop (b + 1 - offset) t')
-        f (_, _) _ = error "Invalid entity indices"
+        -- These are all indices of the original string we want to avoid.
+        ranges :: [Int]
+        ranges = join [[x..y] | [x, y] <- i]
 
 actTL ::
     (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>
