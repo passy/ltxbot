@@ -50,7 +50,7 @@ stripEntities i t =
     -- Read this backwards: Create a string annotated with its index,
     -- then filter by the ranges of characters to exclude and put it back
     -- together.
-    T.pack $ fmap snd $ filter (\e -> not $ fst e `elem` ranges) $ zip [0..] (T.unpack t)
+    T.pack $ fmap snd $ filter (\e -> fst e `notElem` ranges) $ zip [0..] (T.unpack t)
     where
         -- These are all indices of the original string we want to avoid.
         ranges :: [Int]
