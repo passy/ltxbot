@@ -21,13 +21,13 @@ main = hspec $ do
           screenNames `shouldBe` ["ltxbot", "passy"]
 
     describe "stripEntities" $ do
-        it "should leading entities from a string" $ do
+        it "should remove leading entities from a string" $ do
             let text = "not a test"
             let indices = [[0, 3]]
 
             stripEntities indices text `shouldBe` "a test"
 
-        it "should remove entities from a string" $ do
+        it "should remove all entities from a string" $ do
             let text = "this is a test string"
             let indices = [[5, 7], [8, 8], [9, 9], [14, 20]]
 
