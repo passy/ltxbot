@@ -1,0 +1,39 @@
+---
+- name: install supervisor
+  apt: pkg=supervisor state=latest
+
+- name: install docker
+  apt: pkg=docker.io state=latest
+
+- name: install libgmp
+  apt: pkg=libgmp10 state=latest
+
+- name: create user
+  user: name={{ ltxbot.user }} home={{ ltxbot.home }} createhome=true shell=/bin/false groups=docker
+
+- name: setup ltxbot home
+  file: dest={{ ltxbot.home }}/bin owner={{ ltxbot.user }} state=directory
+
+- name: get ltxbot binary
+  get_url: dest={{ ltxbot.home }}/bin/ltxbot url=https://github.com/passy/ltxbot/releases/download/v{{ ltxbot.version }}/ltxbot-{{ ltxbot.version }}.lnx.x86_64
+
+- name: get additional ltxbot files
+  get_url: dest={{ ltxbot.home }}/bin/{{ item.file }} url={{ item.url }}
+  with_items:
+    - { url: "https://raw.githubusercontent.com/passy/ltxbot/v{{ ltxbot.version }}/docker-tex2png.sh", file: 'docker-tex2png.sh' }
+    - { url: "https://raw.githubusercontent.com/passy/ltxbot/v{{ ltxbot.version }}/tex2png.sh", file: 'tex2png.sh' }
+
+- name: set ltxbot binary permissions
+  file: path={{ ltxbot.home }}/bin/{{ item }} state=file mode=700 owner={{ ltxbot.user }}
+  with_items:
+    - ltxbot
+    - docker-tex2png.sh
+    - tex2png.sh
+
+- name: create ltxbot service
+  template: src=supervisor.conf dest=/etc/supervisor/conf.d/ltxbot.conf backup=yes mode=0644
+
+- name: setup ltxbot.conf
+  copy: src=ltxbot.conf dest={{ ltxbot.home }}/ltxbot.conf owner={{ ltxbot.user }} mode=0600
+  notify:
+    - start ltxbot

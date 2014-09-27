@@ -43,6 +43,11 @@ And connect to it through Finder by using `cifs://192.168.59.103/data`.
 You may need to adjust the two `*tex2png.sh` scripts if any of your paths or
 volume names differ.
 
+## Provisioning
+
+There's also a set of [Ansible](http://ansible.com) scripts available unter
+[`ansible/`](ansible/) in this repository that can be used to set up a server.
+
 ## Building
 
 ```bash

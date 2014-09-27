@@ -1,0 +1,6 @@
+---
+- name: start ltxbot
+  supervisorctl: name=ltxbot state=started
+
+- name: restart ltxbot
+  supervisorctl: name=ltxbot state=restarted
