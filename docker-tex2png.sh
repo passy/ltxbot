@@ -35,6 +35,6 @@ fi
 cp "$TDIR/$PNG" "$OUT"
 
 rm -f "$TDIR/$TEX" "$TDIR/$PNG"
-$GRMDIR --ignore-fail-on-non-empty $TDIR
+$RMDIR --ignore-fail-on-non-empty $TDIR
 
 exit 0
