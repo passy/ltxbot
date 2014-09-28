@@ -9,21 +9,21 @@ import qualified Data.Text.IO as T
 import qualified Web.Twitter.Types.Lens as TL
 import qualified Web.Twitter.Types as TT
 
-import Web.Twitter.LtxBot.Latex (renderLaTeXToHandle, standaloneLaTeX)
-import Control.Monad (liftM, join)
-import Control.Monad.IO.Class (liftIO, MonadIO(..))
-import Control.Monad.Trans.Resource (MonadResource)
-import Control.Monad.Logger (MonadLogger)
-import Control.Monad.Catch (MonadCatch, MonadMask)
-import Control.Lens
 import Control.Applicative ((<$>))
-import System.IO.Temp (withSystemTempFile)
+import Control.Lens
+import Control.Monad (liftM, join)
+import Control.Monad.Catch (MonadCatch, MonadMask)
+import Control.Monad.IO.Class (liftIO, MonadIO(..))
+import Control.Monad.Logger (MonadLogger)
+import Control.Monad.Trans.Resource (MonadResource)
+import Data.Maybe (maybeToList)
 import System.FilePath (replaceExtension)
 import System.IO (hClose)
-import Web.Twitter.Conduit (MediaData(..), updateWithMedia, call, TW, inReplyToStatusId)
-import Web.Twitter.Types (StreamingAPI(..), Status(..), UserId)
+import System.IO.Temp (withSystemTempFile)
 import System.Process (system)
-import Data.Maybe (maybeToList)
+import Web.Twitter.Conduit (MediaData(..), updateWithMedia, call, TW, inReplyToStatusId)
+import Web.Twitter.LtxBot.Latex (renderLaTeXToHandle, standaloneLaTeX)
+import Web.Twitter.Types (StreamingAPI(..), Status(..), UserId)
 
 -- | Remove all mentions from StreamingAPI SStatus messages
 -- so that this bot doesn't have to deal with it further down the line.
