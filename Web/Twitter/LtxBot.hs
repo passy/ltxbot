@@ -21,6 +21,7 @@ import System.FilePath (replaceExtension)
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempFile)
 import System.Process (system)
+import System.Exit (ExitCode(..))
 import Web.Twitter.Conduit (MediaData(..), updateWithMedia, call, TW, inReplyToStatusId)
 import Web.Twitter.LtxBot.Latex (renderLaTeXToHandle, standaloneLaTeX)
 import Web.Twitter.Types (StreamingAPI(..), Status(..), UserId)
@@ -76,8 +77,16 @@ actStatus uid s = do
         _ <- liftIO $ do
             renderLaTeXToHandle tmpHandle (standaloneLaTeX (s ^. TL.text))
             hClose tmpHandle -- We can't write to the handle otherwise
-            system $ unwords ["./docker-tex2png.sh", tmpFile]
+            unsafeSystem $ unwords ["./docker-tex2png.sh", tmpFile]
         replyStatusWithImage uid s (replaceExtension tmpFile ".png"))
+
+    where
+        unsafeSystem cmd = do
+            exitcode <- system cmd
+            -- YUCK! See, https://github.com/passy/ltxbot/issues/3
+            case exitcode of
+                ExitFailure _ -> error "Balls."
+                ExitSuccess   -> return ()
 
 showStatus ::
     TL.AsStatus s =>
