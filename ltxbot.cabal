@@ -1,5 +1,5 @@
 name:                ltxbot
-version:             0.0.1
+version:             0.0.2
 synopsis:            Twitter Bot turning LaTeX tweets into PNGs
 homepage:            https://github.com/passy/ltxbot
 license:             MIT
