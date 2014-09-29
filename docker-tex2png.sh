@@ -5,36 +5,34 @@ set -ex
 SCRIPTPATH=$(dirname "$SCRIPT")
 KERNEL=$(uname -s)
 IMAGE="passy/texlive-poppler"
-RMDIR=rmdir
+READLINK=readlink
+MKTEMP=mktemp
 
-if [ Linux == "$KERNEL" ]; then
-    SCRIPT=$(readlink -f "$0")
-    TDIR=$(mktemp -d)
-else
-    SCRIPT=$(greadlink -f "$0")
-    TDIR="/Volumes/data"
-    RMDIR=grmdir
+if [ "Linux" != "$KERNEL" ]; then
+    READLINK=greadlink
+    MKTEMP=gmktemp
+    export TMPDIR="/Volumes/data"
 fi
 
-TEX=$(basename "$1")
-PNG=$(basename -s .tex "$1").png
-OUT="$(dirname "$1")/$PNG"
+SCRIPT=$($READLINK -f "$0")
+OUTPUT=$($READLINK -f "$1")
+TDIR=$($MKTEMP -d)
+TBASEDIR=$(basename "$TDIR")
+TEX="tmp.tex"
+PNG="tmp.png"
 
-trap "{ cd - ; rm -f "$TDIR/$TEX" ; rm -f "$TDIR/$PNG" ; $GRMDIR --ignore-fail-on-non-empty $TDIR; exit 255; }" SIGINT
+trap "{ cd - ; rm -rf '$TDIR'; exit 255; }" SIGINT
 
-# Copy tex file and script to run inside the container
-cp "$1" "$TDIR/$TEX"
+cat /dev/stdin > "$TDIR/$TEX"
 cp "$SCRIPTPATH/tex2png.sh" "$TDIR"
 
-if [ Linux == "$KERNEL" ]; then
-    docker run --rm -v $TDIR:/data -w /data $IMAGE /bin/bash tex2png.sh "$TEX"
+if [ "Linux" == "$KERNEL" ]; then
+    docker run --rm -v "$TDIR":/data -w /data $IMAGE /bin/bash tex2png.sh "$TEX"
 else
-    docker run --rm --volumes-from my-data -w /data $IMAGE /bin/bash tex2png.sh "$TEX"
+    docker run --rm --volumes-from my-data -w "/data/$TBASEDIR" $IMAGE /bin/bash "tex2png.sh" "$TEX"
 fi
 
-cp "$TDIR/$PNG" "$OUT"
-
-rm -f "$TDIR/$TEX" "$TDIR/$PNG"
-$RMDIR --ignore-fail-on-non-empty $TDIR
+cp "$TDIR/$PNG" "$OUTPUT"
+rm -rf "$TDIR"
 
 exit 0
