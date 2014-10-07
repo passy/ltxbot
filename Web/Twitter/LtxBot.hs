@@ -20,8 +20,7 @@ import Data.Maybe (maybeToList)
 import System.FilePath (replaceExtension)
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempFile)
-import System.Process (system)
-import System.Exit (ExitCode(..))
+import System.Process (readProcess)
 import Web.Twitter.Conduit (MediaData(..), updateWithMedia, call, TW, inReplyToStatusId)
 import Web.Twitter.LtxBot.Latex (renderLaTeXToHandle, standaloneLaTeX)
 import Web.Twitter.Types (StreamingAPI(..), Status(..), UserId)
@@ -74,19 +73,16 @@ actStatus uid s = do
     withSystemTempFile "hatmp.tex" (\ tmpFile tmpHandle -> do
         -- Yuck, this is mutable state, global mutable state even. Let's figure
         -- out if this can be piped through stdin.
+        let pngFile = replaceExtension tmpFile ".png"
         _ <- liftIO $ do
+            -- TODO: Don't write to disk, silly.
             renderLaTeXToHandle tmpHandle (standaloneLaTeX (s ^. TL.text))
             hClose tmpHandle -- We can't write to the handle otherwise
-            unsafeSystem $ unwords ["./docker-tex2png.sh", tmpFile]
-        replyStatusWithImage uid s (replaceExtension tmpFile ".png"))
-
-    where
-        unsafeSystem cmd = do
-            exitcode <- system cmd
-            -- YUCK! See, https://github.com/passy/ltxbot/issues/3
-            case exitcode of
-                ExitFailure _ -> error "Balls."
-                ExitSuccess   -> return ()
+            fileContent <- readFile tmpFile
+            -- TODO: Use readProcessWithExitCode which is total or
+            -- conduit-process.
+            readProcess "./docker-tex2png.sh" [pngFile] fileContent
+        replyStatusWithImage uid s pngFile)
 
 showStatus ::
     TL.AsStatus s =>
