@@ -1,30 +1,27 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Web.Twitter.LtxBot.Latex
-  (renderLaTeXToHandle, standaloneLaTeX)
+  (renderLaTeXStatus)
 where
 
-import qualified Data.ByteString as B
-import Text.LaTeX (execLaTeXT, document, raw, LaTeXT_, LaTeXT, documentclass, ClassName, ClassOption(..), Render, render)
-import Data.Text (Text)
-import Data.Text.Encoding (encodeUtf8)
-import System.IO (Handle)
+import Text.LaTeX (document, raw, LaTeXT_, documentclass, ClassName, ClassOption(..), render, execLaTeXT, renderFile, LaTeX)
+import qualified Data.Text as T
+import Data.Monoid ((<>))
+import Web.Twitter.Types (Status)
+import qualified Web.Twitter.Types.Lens as TL
+import Control.Lens ((^.))
 
 standalone :: ClassName
 standalone = "standalone"
 
 -- | Wrap a raw string to a minimal LaTeX document
-standaloneLaTeX :: Monad m => Text -> LaTeXT_ m
-standaloneLaTeX input = do
-  documentclass [CustomOption "preview"] standalone
-  document $ raw input
+standaloneLaTeX :: T.Text -> LaTeX
+standaloneLaTeX input =
+     documentclass [CustomOption "preview"] standalone
+  <> document (raw input)
 
--- | Use this function to render a 'LaTeX' (or another
---   one in the 'Render' class) value directly
---   into a file handle.
-renderHandle :: Render a => Handle -> a -> IO ()
-renderHandle f = B.hPutStr f . encodeUtf8 . render
+wrapLaTeXStatus :: Status -> LaTeX
+wrapLaTeXStatus s = standaloneLaTeX (s ^. TL.text)
 
-renderLaTeXToHandle :: Handle -> LaTeXT IO a -> IO ()
-renderLaTeXToHandle f tex =
-  execLaTeXT tex >>= renderHandle f
+renderLaTeXStatus :: Status -> T.Text
+renderLaTeXStatus s = render (wrapLaTeXStatus s)

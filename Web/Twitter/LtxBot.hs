@@ -17,12 +17,11 @@ import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Control.Monad.Logger (MonadLogger)
 import Control.Monad.Trans.Resource (MonadResource)
 import Data.Maybe (maybeToList)
-import System.FilePath (replaceExtension)
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempFile)
 import System.Process (readProcess)
 import Web.Twitter.Conduit (MediaData(..), updateWithMedia, call, TW, inReplyToStatusId)
-import Web.Twitter.LtxBot.Latex (renderLaTeXToHandle, standaloneLaTeX)
+import Web.Twitter.LtxBot.Latex (renderLaTeXStatus)
 import Web.Twitter.Types (StreamingAPI(..), Status(..), UserId)
 
 -- | Remove all mentions from StreamingAPI SStatus messages
@@ -69,20 +68,17 @@ actStatus :: (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>
     Status ->
     TW m ()
 actStatus uid s = do
-    liftIO $ T.putStrLn $ showStatus s
-    withSystemTempFile "hatmp.tex" (\ tmpFile tmpHandle -> do
+    let content = T.unpack $ renderLaTeXStatus s
+    withSystemTempFile "hatmp.png" (\ tmpFile tmpHandle -> do
         -- Yuck, this is mutable state, global mutable state even. Let's figure
         -- out if this can be piped through stdin.
-        let pngFile = replaceExtension tmpFile ".png"
         _ <- liftIO $ do
-            -- TODO: Don't write to disk, silly.
-            renderLaTeXToHandle tmpHandle (standaloneLaTeX (s ^. TL.text))
-            hClose tmpHandle -- We can't write to the handle otherwise
-            fileContent <- readFile tmpFile
+            T.putStrLn $ showStatus s
+            hClose tmpHandle -- The runtime maintains a lock on the file otherwise.
             -- TODO: Use readProcessWithExitCode which is total or
             -- conduit-process.
-            readProcess "./docker-tex2png.sh" [pngFile] fileContent
-        replyStatusWithImage uid s pngFile)
+            readProcess "./docker-tex2png.sh" [tmpFile] content
+        replyStatusWithImage uid s tmpFile)
 
 showStatus ::
     TL.AsStatus s =>
