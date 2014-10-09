@@ -14,11 +14,24 @@
 - name: setup ltxbot home
   file: dest={{ ltxbot.home }}/bin owner={{ ltxbot.user }} state=directory
 
+- name: get local version
+  shell: if [ -f {{ltxbot.home }}/version.txt ]; then cat {{ ltxbot.home }}/version.txt; else echo "0.0"; fi
+  register: local_ltxbot_version
+
 - name: get ltxbot binary
-  get_url: dest={{ ltxbot.home }}/bin/ltxbot url=https://github.com/passy/ltxbot/releases/download/v{{ ltxbot.version }}/ltxbot-{{ ltxbot.version }}.lnx.x86_64
+  get_url: dest={{ ltxbot.home }}/bin/ltxbot.tmp url=https://github.com/passy/ltxbot/releases/download/v{{ ltxbot.version }}/ltxbot-{{ ltxbot.version }}.lnx.x86_64 force=true
+  when: local_ltxbot_version != "{{ ltxbot.version }}"
+  register: fetch_ltxbot
+
+- name: move ltxbot binary
+  command: mv {{ ltxbot.home }}/bin/ltxbot.tmp {{ ltxbot.home }}/bin/ltxbot
+  when: fetch_ltxbot.changed
+
+- name: write ltxbot version
+  template: src=version.txt dest={{ ltxbot.home }}/version.txt backup=no mode=0644
 
 - name: get additional ltxbot files
-  get_url: dest={{ ltxbot.home }}/bin/{{ item.file }} url={{ item.url }}
+  get_url: dest={{ ltxbot.home }}/bin/{{ item.file }} url={{ item.url }} force=true
   with_items:
     - { url: "https://raw.githubusercontent.com/passy/ltxbot/v{{ ltxbot.version }}/docker-tex2png.sh", file: 'docker-tex2png.sh' }
     - { url: "https://raw.githubusercontent.com/passy/ltxbot/v{{ ltxbot.version }}/tex2png.sh", file: 'tex2png.sh' }
