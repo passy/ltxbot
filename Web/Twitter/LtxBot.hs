@@ -17,10 +17,11 @@ import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Control.Monad.Logger (MonadLogger)
 import Control.Monad.Trans.Resource (MonadResource)
 import Data.Maybe (maybeToList)
+import System.Exit (ExitCode(ExitSuccess, ExitFailure))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempFile)
-import System.Process (readProcess)
-import Web.Twitter.Conduit (MediaData(..), updateWithMedia, call, TW, inReplyToStatusId)
+import System.Process (readProcessWithExitCode)
+import Web.Twitter.Conduit (MediaData(..), updateWithMedia, call, TW, inReplyToStatusId, update)
 import Web.Twitter.LtxBot.Latex (renderLaTeXStatus)
 import Web.Twitter.Types (StreamingAPI(..), Status(..), UserId)
 
@@ -72,13 +73,14 @@ actStatus uid s = do
     withSystemTempFile "hatmp.png" (\ tmpFile tmpHandle -> do
         -- Yuck, this is mutable state, global mutable state even. Let's figure
         -- out if this can be piped through stdin.
-        _ <- liftIO $ do
+        liftIO $ do
             T.putStrLn $ showStatus s
             hClose tmpHandle -- The runtime maintains a lock on the file otherwise.
-            -- TODO: Use readProcessWithExitCode which is total or
-            -- conduit-process.
-            readProcess "./docker-tex2png.sh" [tmpFile] content
-        replyStatusWithImage uid s tmpFile)
+
+        (status, _, _) <- liftIO $ readProcessWithExitCode "./docker-tex2png.sh" [tmpFile] content
+        case status of
+            ExitSuccess -> replyStatusWithImage uid s tmpFile
+            ExitFailure _ -> replyStatusWithError s)
 
 showStatus ::
     TL.AsStatus s =>
@@ -88,6 +90,18 @@ showStatus s = T.concat [ s ^. TL.user . TL.userScreenName
                         , ": "
                         , s ^. TL.text
                         ]
+
+replyStatusWithError ::
+    (MonadLogger m, MonadResource m) =>
+    Status ->
+    TW m ()
+replyStatusWithError status = do
+    res <- call updateCall
+    liftIO $ print res
+    where
+        errorMessage = "Sorry, I could not compile your LaTeX, friend."
+        statusString = T.unwords [T.concat ["@", status ^. TL.user . TL.userScreenName], errorMessage]
+        updateCall = update statusString & inReplyToStatusId ?~ statusId status
 
 replyStatusWithImage ::
     (MonadLogger m, MonadResource m) =>
@@ -99,7 +113,6 @@ replyStatusWithImage uid status filepath = do
     -- TODO: Do something with res, don't return ()
     res <- call updateCall
     liftIO $ print res
-    return ()
     where
         allMentions = extractStatusMentions status
         otherMentions = filter (\u -> TT.userEntityUserId u /= uid) allMentions
@@ -107,7 +120,6 @@ replyStatusWithImage uid status filepath = do
         statusString = T.unwords [T.concat ["@", status ^. TL.user . TL.userScreenName], mentionsString]
         media = MediaFromFile filepath
         updateCall = updateWithMedia statusString media & inReplyToStatusId ?~ statusId status
-
 
 extractStatusMentions :: Status -> [TL.UserEntity]
 extractStatusMentions s = do
