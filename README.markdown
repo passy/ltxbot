@@ -45,7 +45,7 @@ volume names differ.
 
 ## Provisioning
 
-There's also a set of [Ansible](http://ansible.com) scripts available unter
+There's also a set of [Ansible](http://ansible.com) scripts available under
 [`ansible/`](ansible/) in this repository that can be used to set up a server.
 
 ## Building
