@@ -14,7 +14,6 @@ import System.Console.CmdArgs.Explicit (HelpFormat(..), helpText)
 import Web.Twitter.Conduit (stream, statusesFilterByTrack)
 import Web.Twitter.LtxBot (actTL, normalizeMentions)
 import Web.Twitter.LtxBot.Common (runTwitterFromEnv')
-import Web.Twitter.Types (UserId)
 
 import qualified Data.Conduit as C
 import qualified Data.Conduit.List as CL

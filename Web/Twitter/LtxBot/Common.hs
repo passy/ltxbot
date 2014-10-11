@@ -1,18 +1,18 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
 module Web.Twitter.LtxBot.Common where
 
-import qualified Web.Authenticate.OAuth as OA
-import qualified Network.URI as URI
-import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as S8
 import qualified Data.CaseInsensitive as CI
 import qualified Data.Configurator as Conf
+import qualified Data.Map as M
+import qualified Network.URI as URI
+import qualified Web.Authenticate.OAuth as OA
 
 import Control.Applicative ((<$>), (<|>), (<*>))
 import Control.Lens
-import Control.Monad.Base
-import Control.Monad.IO.Class
-import Control.Monad.Logger
+import Control.Monad.Base (liftBase)
+import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.Logger (NoLoggingT, runNoLoggingT)
 import Control.Monad.Trans.Resource (ResourceT, MonadBaseControl)
 import Data.Configurator.Types (Config)
 import Network.HTTP.Conduit (Proxy(..))
@@ -54,7 +54,6 @@ getOAuthTokens conf = do
             token <- Conf.lookupDefault "" conf "accessToken"
             secret <- Conf.lookupDefault "" conf "accessSecret"
             return $ newCredential token secret
-
 
 runTwitterFromEnv ::
     (MonadIO m, MonadBaseControl IO m) =>
