@@ -25,6 +25,7 @@ executable ltxbot
                      , transformers-base
                      , monad-logger
                      , authenticate-oauth >=1.4
+                     , cmdargs >= 0.10
                      , bytestring >=0.10
                      , conduit >= 1.0
                      , configurator >= 0.2
