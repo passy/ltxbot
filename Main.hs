@@ -52,7 +52,7 @@ runBot confFile = do
     username <- Conf.lookupDefault "" conf "userName"
 
     maybeUid <- liftM (listToMaybe . T.split (== '-')) (Conf.lookupDefault "" conf "accessToken")
-    let userId = fmap (read . T.unpack) maybeUid :: Maybe UserId
+    let userId = fmap (read . T.unpack) maybeUid
     when (isNothing userId) $ error "accessToken must contain a '-'"
 
     T.putStrLn $ T.unwords ["Listening for Tweets to", username, "…"]
