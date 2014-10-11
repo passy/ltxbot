@@ -59,5 +59,3 @@ runBot confFile = do
     runTwitterFromEnv' conf $ do
         src <- stream $ statusesFilterByTrack $ T.concat ["@", username]
         src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act (actTL $ fromJust userId))
-
-    return ()
