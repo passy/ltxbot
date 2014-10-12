@@ -13,7 +13,7 @@ TDIR=$(mktemp -d)
 trap "{ cd - ; rm -rf $TDIR; exit 255; }" SIGINT
 
 cd "$TDIR"
-    pdflatex "$SCRIPTPATH/$TEX"
+    pdflatex -interaction=batchmode "$SCRIPTPATH/$TEX"
     pdfcrop "$PDF" "$PDF"
     pdftocairo -singlefile -png "$PDF"
 cd -
