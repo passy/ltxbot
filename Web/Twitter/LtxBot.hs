@@ -12,6 +12,7 @@ import qualified Web.Twitter.Types as TT
 import Control.Applicative ((<$>))
 import Control.Lens
 import Control.Monad (liftM, join)
+import Control.Monad.Trans.Class (lift)
 import Control.Monad.Catch (MonadCatch, MonadMask)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Control.Monad.Logger (MonadLogger)
@@ -21,8 +22,9 @@ import System.Exit (ExitCode(ExitSuccess, ExitFailure))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempFile)
 import System.Process (readProcessWithExitCode)
-import Web.Twitter.Conduit (MediaData(..), updateWithMedia, call, TW, inReplyToStatusId, update)
+import Web.Twitter.Conduit (MediaData(..), updateWithMedia, call, inReplyToStatusId, update)
 import Web.Twitter.LtxBot.Latex (renderLaTeXStatus)
+import Web.Twitter.LtxBot.Common (LTXE)
 import Web.Twitter.Types (StreamingAPI(..), Status(..), UserId)
 
 -- | Remove all mentions from StreamingAPI SStatus messages
@@ -60,14 +62,14 @@ actTL ::
     (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>
     UserId ->
     StreamingAPI ->
-    TW m ()
+    LTXE m ()
 actTL u (SStatus s) = actStatus u s
 actTL _ _ = liftIO $ T.putStrLn "Other event"
 
 actStatus :: (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>
     UserId ->
     Status ->
-    TW m ()
+    LTXE m ()
 actStatus uid s = do
     let content = T.unpack $ renderLaTeXStatus s
     withSystemTempFile "hatmp.png" (\ tmpFile tmpHandle -> do
@@ -94,9 +96,9 @@ showStatus s = T.concat [ s ^. TL.user . TL.userScreenName
 replyStatusWithError ::
     (MonadLogger m, MonadResource m) =>
     Status ->
-    TW m ()
+    LTXE m ()
 replyStatusWithError status = do
-    res <- call updateCall
+    res <- lift $ call updateCall
     liftIO $ print res
     where
         errorMessage = "Sorry, I could not compile your LaTeX, friend."
@@ -108,10 +110,10 @@ replyStatusWithImage ::
     UserId ->
     Status ->
     FilePath ->
-    TW m ()
+    LTXE m ()
 replyStatusWithImage uid status filepath = do
     -- TODO: Do something with res, don't return ()
-    res <- call updateCall
+    res <- lift $ call updateCall
     liftIO $ print res
     where
         allMentions = extractStatusMentions status

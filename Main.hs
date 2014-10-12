@@ -5,8 +5,12 @@ import Prelude
 
 import Control.Lens
 import Control.Monad (liftM, when)
+import Control.Monad.Trans.Class (lift)
+import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Data.Data (Data)
+import Data.Conduit.Lift (readerC, runReaderC)
 import Data.Maybe (listToMaybe, isNothing, fromJust)
+import Data.Conduit.Lift (runReaderC)
 import Data.Typeable (Typeable)
 import Data.Version (showVersion)
 import Paths_ltxbot (version)
@@ -14,6 +18,7 @@ import System.Console.CmdArgs.Explicit (HelpFormat(..), helpText)
 import Web.Twitter.Conduit (stream, statusesFilterByTrack)
 import Web.Twitter.LtxBot (actTL, normalizeMentions)
 import Web.Twitter.LtxBot.Common (runTwitterFromEnv')
+import Web.Twitter.Types (UserId)
 
 import qualified Data.Conduit as C
 import qualified Data.Conduit.List as CL
@@ -43,18 +48,15 @@ main = do
 
 runBot :: FilePath -> IO ()
 runBot confFile = do
-    -- TODO: Instead of passing around conf, could
-    -- I wrap all this in a ReaderT?
-    -- UPDATE: Turns out TW is already a `type TW m = ReaderT TWEnv m`
-    -- Does that help me?
     conf <- Conf.load [Conf.Required confFile]
     username <- Conf.lookupDefault "" conf "userName"
 
-    maybeUid <- liftM (listToMaybe . T.split (== '-')) (Conf.lookupDefault "" conf "accessToken")
+    -- TODO: Remove.
+    maybeUid <- liftIO $ liftM (listToMaybe . T.split (== '-')) (Conf.lookupDefault "" conf "accessToken")
     let userId = fmap (read . T.unpack) maybeUid
     when (isNothing userId) $ error "accessToken must contain a '-'"
 
     T.putStrLn $ T.unwords ["Listening for Tweets to", username, "…"]
     runTwitterFromEnv' conf $ do
-        src <- stream $ statusesFilterByTrack $ T.concat ["@", username]
+        src <- statusesFilterByTrack $ T.concat ["@", username]
         src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act (actTL $ fromJust userId))
