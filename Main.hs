@@ -8,9 +8,7 @@ import Control.Monad (liftM, when)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Data.Data (Data)
-import Data.Conduit.Lift (readerC, runReaderC)
 import Data.Maybe (listToMaybe, isNothing, fromJust)
-import Data.Conduit.Lift (runReaderC)
 import Data.Typeable (Typeable)
 import Data.Version (showVersion)
 import Paths_ltxbot (version)
@@ -58,5 +56,5 @@ runBot confFile = do
 
     T.putStrLn $ T.unwords ["Listening for Tweets to", username, "…"]
     runTwitterFromEnv' conf $ do
-        src <- statusesFilterByTrack $ T.concat ["@", username]
-        src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act (actTL $ fromJust userId))
+        src <- lift $ stream $ statusesFilterByTrack $ T.concat ["@", username]
+        (readerC src) C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act (actTL $ fromJust userId))
