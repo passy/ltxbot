@@ -54,7 +54,7 @@ runBot confFile = do
     let userId = fmap (read . T.unpack) maybeUid
     when (isNothing userId) $ error "accessToken must contain a '-'"
 
-    T.putStrLn $ T.unwords ["Listening for Tweets to", username, "…"]
+    T.putStrLn $ T.unwords ["Listening for Tweets to", username, "..."]
     runTwitterFromEnv' conf $ do
         src <- stream $ statusesFilterByTrack $ T.concat ["@", username]
         src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act (actTL $ fromJust userId))
