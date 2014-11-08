@@ -5,20 +5,33 @@ import qualified Data.ByteString.Char8 as S8
 import qualified Data.CaseInsensitive as CI
 import qualified Data.Configurator as Conf
 import qualified Data.Map as M
+import qualified Data.Text as T
 import qualified Network.URI as URI
 import qualified Web.Authenticate.OAuth as OA
 
 import Control.Applicative ((<$>), (<|>), (<*>))
 import Control.Lens
+import Control.Monad (liftM, when)
+import Control.Monad.IO.Class (liftIO)
+import Data.Maybe (listToMaybe, isNothing, fromJust)
 import Control.Monad.Base (liftBase)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Logger (NoLoggingT, runNoLoggingT)
+import Control.Monad.Reader (ReaderT, runReaderT)
 import Control.Monad.Trans.Resource (ResourceT, MonadBaseControl)
 import Data.Configurator.Types (Config)
 import Network.HTTP.Conduit (Proxy(..))
 import System.Environment (getEnvironment)
 import Web.Authenticate.OAuth (OAuth(..), Credential, newOAuth, newCredential)
 import Web.Twitter.Conduit (TW, setCredential, twProxy, runTW)
+import Web.Twitter.Types (UserId)
+
+data LtxbotEnv = LtxbotEnv { userId :: UserId }
+    deriving (Show)
+
+-- | My Reader thingy to pass around the environment implicitly,
+--   the same way the Conduit TW env is used, but wrapping it.
+type LTXE m = ReaderT LtxbotEnv (TW m)
 
 getProxyEnv :: IO (Maybe Proxy)
 getProxyEnv = do
@@ -63,8 +76,8 @@ runTwitterFromEnv ::
 runTwitterFromEnv conf task = do
     pr <- liftBase getProxyEnv
     (oa, cred) <- liftBase $ getOAuthTokens conf
-    let env = (setCredential oa cred OA.def) { twProxy = pr }
-    runTW env task
+    let tenv = (setCredential oa cred OA.def) { twProxy = pr }
+    runTW tenv task
 
 runTwitterFromEnv' ::
     (MonadIO m, MonadBaseControl IO m) =>
