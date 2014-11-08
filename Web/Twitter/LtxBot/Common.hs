@@ -5,19 +5,15 @@ import qualified Data.ByteString.Char8 as S8
 import qualified Data.CaseInsensitive as CI
 import qualified Data.Configurator as Conf
 import qualified Data.Map as M
-import qualified Data.Text as T
 import qualified Network.URI as URI
 import qualified Web.Authenticate.OAuth as OA
 
 import Control.Applicative ((<$>), (<|>), (<*>))
 import Control.Lens
-import Control.Monad (liftM, when)
-import Control.Monad.IO.Class (liftIO)
-import Data.Maybe (listToMaybe, isNothing, fromJust)
 import Control.Monad.Base (liftBase)
 import Control.Monad.IO.Class (MonadIO)
 import Control.Monad.Logger (NoLoggingT, runNoLoggingT)
-import Control.Monad.Reader (ReaderT, runReaderT)
+import Control.Monad.Reader (ReaderT)
 import Control.Monad.Trans.Resource (ResourceT, MonadBaseControl)
 import Data.Configurator.Types (Config)
 import Network.HTTP.Conduit (Proxy(..))
