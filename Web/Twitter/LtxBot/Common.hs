@@ -71,25 +71,17 @@ getOAuthTokens conf = do
 runTwitterFromEnv ::
     (MonadIO m, MonadBaseControl IO m) =>
     Config ->
-    LTXE (ResourceT m) a ->
+    TW (ResourceT m) a ->
     m a
 runTwitterFromEnv conf task = do
-    -- TODO: Store in env, too.
-    -- username <- Conf.lookupDefault "" conf "userName"
-
-    maybeUid <- liftIO $ liftM (listToMaybe . T.split (== '-')) (Conf.lookupDefault "" conf "accessToken")
-    let userId = fmap (read . T.unpack) maybeUid
-    when (isNothing userId) $ error "accessToken must contain a '-'"
-    let lenv = LtxbotEnv $ fromJust userId
-
     pr <- liftBase getProxyEnv
     (oa, cred) <- liftBase $ getOAuthTokens conf
     let tenv = (setCredential oa cred OA.def) { twProxy = pr }
-    runTW tenv (runReaderT task lenv)
+    runTW tenv task
 
 runTwitterFromEnv' ::
     (MonadIO m, MonadBaseControl IO m) =>
     Config ->
-    LTXE (ResourceT (NoLoggingT m)) a ->
+    TW (ResourceT (NoLoggingT m)) a ->
     m a
 runTwitterFromEnv' = (runNoLoggingT .) . runTwitterFromEnv
