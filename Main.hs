@@ -5,7 +5,6 @@ import Prelude
 
 import Control.Lens
 import Control.Monad (liftM, when)
-import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Reader (runReaderT)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Data.Data (Data)
@@ -17,7 +16,6 @@ import System.Console.CmdArgs.Explicit (HelpFormat(..), helpText)
 import Web.Twitter.Conduit (stream, statusesFilterByTrack)
 import Web.Twitter.LtxBot (actTL, normalizeMentions)
 import Web.Twitter.LtxBot.Common (runTwitterFromEnv', LtxbotEnv(..))
-import Web.Twitter.Types (UserId)
 
 import qualified Data.Conduit as C
 import qualified Data.Conduit.List as CL
@@ -52,11 +50,11 @@ runBot confFile = do
 
     -- TODO: Remove.
     maybeUid <- liftIO $ liftM (listToMaybe . T.split (== '-')) (Conf.lookupDefault "" conf "accessToken")
-    let userId = fmap (read . T.unpack) maybeUid
-    when (isNothing userId) $ error "accessToken must contain a '-'"
-    let lenv = LtxbotEnv $ fromJust userId
+    let userId' = fmap (read . T.unpack) maybeUid
+    when (isNothing userId') $ error "accessToken must contain a '-'"
+    let lenv = LtxbotEnv $ fromJust userId'
 
     T.putStrLn $ T.unwords ["Listening for Tweets to", username, "…"]
     runTwitterFromEnv' conf $ do
         src <- stream $ statusesFilterByTrack $ T.concat ["@", username]
-        src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act ((flip runReaderT lenv) . (actTL $ fromJust userId)))
+        src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act ((flip runReaderT lenv) . (actTL $ fromJust userId')))
