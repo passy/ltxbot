@@ -57,4 +57,4 @@ runBot confFile = do
     T.putStrLn $ T.unwords ["Listening for Tweets to", username, "…"]
     runTwitterFromEnv' conf $ do
         src <- stream $ statusesFilterByTrack $ T.concat ["@", username]
-        src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act ((flip runReaderT lenv) . (actTL $ fromJust userId')))
+        src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act ((flip runReaderT lenv) . actTL))

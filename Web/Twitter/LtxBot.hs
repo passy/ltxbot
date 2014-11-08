@@ -17,6 +17,7 @@ import Control.Monad.Catch (MonadCatch, MonadMask)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Control.Monad.Logger (MonadLogger)
 import Control.Monad.Trans.Resource (MonadResource)
+import Control.Monad.Reader.Class (asks)
 import Data.Maybe (maybeToList)
 import System.Exit (ExitCode(ExitSuccess, ExitFailure))
 import System.IO (hClose)
@@ -24,7 +25,7 @@ import System.IO.Temp (withSystemTempFile)
 import System.Process (readProcessWithExitCode)
 import Web.Twitter.Conduit (MediaData(..), updateWithMedia, call, inReplyToStatusId, update)
 import Web.Twitter.LtxBot.Latex (renderLaTeXStatus)
-import Web.Twitter.LtxBot.Common (LTXE)
+import Web.Twitter.LtxBot.Common (LTXE, LtxbotEnv(userId))
 import Web.Twitter.Types (StreamingAPI(..), Status(..), UserId)
 
 -- | Remove all mentions from StreamingAPI SStatus messages
@@ -60,17 +61,16 @@ stripEntities i t =
 
 actTL ::
     (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>
-    UserId ->
     StreamingAPI ->
     LTXE m ()
-actTL u (SStatus s) = actStatus u s
-actTL _ _ = liftIO $ T.putStrLn "Other event"
+actTL (SStatus s) = actStatus s
+actTL _ = liftIO $ T.putStrLn "Other event"
 
 actStatus :: (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>
-    UserId ->
     Status ->
     LTXE m ()
-actStatus uid s = do
+actStatus s = do
+    uid <- asks userId
     let content = T.unpack $ renderLaTeXStatus s
     withSystemTempFile "hatmp.png" (\ tmpFile tmpHandle -> do
         -- Yuck, this is mutable state, global mutable state even. Let's figure
