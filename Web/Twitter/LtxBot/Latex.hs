@@ -4,7 +4,7 @@ module Web.Twitter.LtxBot.Latex
   (renderLaTeXStatus)
 where
 
-import Text.LaTeX (document, raw, LaTeXT_, documentclass, ClassName, ClassOption(..), render, execLaTeXT, renderFile, LaTeX)
+import Text.LaTeX (document, raw, documentclass, ClassName, ClassOption(..), render, LaTeX)
 import qualified Data.Text as T
 import Data.Monoid ((<>))
 import Web.Twitter.Types (Status)
