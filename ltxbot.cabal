@@ -19,7 +19,6 @@ executable ltxbot
                      , bytestring >=0.10
                      , case-insensitive
                      , cmdargs >= 0.10
-                     , conduit
                      , conduit >= 1.0
                      , configurator >= 0.2
                      , containers
@@ -56,7 +55,6 @@ test-suite spec_main
                      , twitter-conduit >= 0.0.6
                      , twitter-types
                      , HaTeX
-                     , conduit
                      , mtl
                      , network-uri
                      , containers
