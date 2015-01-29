@@ -37,6 +37,7 @@ executable ltxbot
                      , transformers-base
                      , twitter-conduit >= 0.0.6 && < 0.1.0
                      , twitter-types == 0.6.1
+                     , twitter-types-lens
   default-language:    Haskell2010
   Ghc-options:         -Wall
                        -fwarn-tabs
@@ -54,6 +55,7 @@ test-suite spec_main
   build-depends:       base >=4.7 && <4.8
                      , twitter-conduit >= 0.0.6 && < 0.1.0
                      , twitter-types == 0.6.1
+                     , twitter-types-lens
                      , HaTeX
                      , mtl
                      , network-uri
