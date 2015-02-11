@@ -4,7 +4,7 @@ module Main where
 import Prelude
 
 import Control.Lens
-import Control.Monad (liftM, when)
+import Control.Monad (when)
 import Control.Monad.Trans.Reader (runReaderT)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Data.Data (Data)
@@ -49,7 +49,7 @@ runBot confFile = do
     username <- Conf.lookupDefault "" conf "userName"
 
     -- TODO: Remove.
-    maybeUid <- liftIO $ liftM (listToMaybe . T.split (== '-')) (Conf.lookupDefault "" conf "accessToken")
+    maybeUid <- liftIO $ fmap (listToMaybe . T.split (== '-')) (Conf.lookupDefault "" conf "accessToken")
     let userId' = fmap (read . T.unpack) maybeUid
     when (isNothing userId') $ error "accessToken must contain a '-'"
     let lenv = LtxbotEnv $ fromJust userId'
