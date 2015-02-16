@@ -11,7 +11,7 @@ import qualified Web.Twitter.Types as TT
 
 import Control.Applicative ((<$>))
 import Control.Lens
-import Control.Monad (liftM, join)
+import Control.Monad (join)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Catch (MonadCatch, MonadMask)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
@@ -25,7 +25,7 @@ import System.IO.Temp (withSystemTempFile)
 import System.Process (readProcessWithExitCode)
 import Web.Twitter.Conduit (MediaData(..), updateWithMedia, call, inReplyToStatusId, update)
 import Web.Twitter.LtxBot.Latex (renderLaTeXStatus)
-import Web.Twitter.LtxBot.Common (LTXE, LtxbotEnv(userId))
+import Web.Twitter.LtxBot.Common (LTXE, LtxbotEnv(..))
 import Web.Twitter.Types (StreamingAPI(..), Status(..), UserId)
 
 -- | Remove all mentions from StreamingAPI SStatus messages
@@ -53,7 +53,7 @@ stripEntities i t =
     -- Read this backwards: Create a string annotated with its index,
     -- then filter by the ranges of characters to exclude and put it back
     -- together.
-    T.pack $ fmap snd $ filter (\e -> fst e `notElem` excludeRange) $ zip [0..] (T.unpack t)
+    (T.pack . fmap snd) . filter (\ e -> fst e `notElem` excludeRange) $ zip [0..] (T.unpack t)
     where
         -- These are all indices of the original string we want to avoid.
         excludeRange :: [Int]
@@ -70,7 +70,7 @@ actStatus :: (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>
     Status ->
     LTXE m ()
 actStatus s = do
-    uid <- asks userId
+    uid <- asks ltxeUserId
     let content = T.unpack $ renderLaTeXStatus s
     withSystemTempFile "hatmp.png" (\ tmpFile tmpHandle -> do
         -- Yuck, this is mutable state, global mutable state even. Let's figure
@@ -98,7 +98,10 @@ replyStatusWithError ::
     Status ->
     LTXE m ()
 replyStatusWithError status = do
-    res <- lift $ call updateCall
+    -- TODO: Make a wrapper for this that is less ugly.
+    twInfo <- asks ltxeTwInfo
+    mngr <- asks ltxeMngr
+    res <- lift $ call twInfo mngr updateCall
     liftIO $ print res
     where
         errorMessage = "Sorry, I could not compile your LaTeX, friend."
@@ -113,7 +116,9 @@ replyStatusWithImage ::
     LTXE m ()
 replyStatusWithImage uid status filepath = do
     -- TODO: Do something with res, don't return ()
-    res <- lift $ call updateCall
+    twInfo <- asks ltxeTwInfo
+    mngr <- asks ltxeMngr
+    res <- lift $ call twInfo mngr updateCall
     liftIO $ print res
     where
         allMentions = extractStatusMentions status
@@ -129,5 +134,5 @@ extractStatusMentions s = do
     -- I'm sure there's a way to do all of this in a single combined
     -- lens operation
     let ues = s ^. TL.statusEntities >>= (^? TL.enUserMentions)
-    let mentions = liftM (fmap (^. TL.entityBody)) ues
+    let mentions = fmap (fmap (^. TL.entityBody)) ues
     join $ maybeToList mentions

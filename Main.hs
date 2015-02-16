@@ -15,7 +15,7 @@ import Paths_ltxbot (version)
 import System.Console.CmdArgs.Explicit (HelpFormat(..), helpText)
 import Web.Twitter.Conduit (stream, statusesFilterByTrack)
 import Web.Twitter.LtxBot (actTL, normalizeMentions)
-import Web.Twitter.LtxBot.Common (runTwitterFromEnv', LtxbotEnv(..))
+import Web.Twitter.LtxBot.Common (getTWInfoFromEnv, LtxbotEnv(..))
 
 import qualified Data.Conduit as C
 import qualified Data.Conduit.List as CL
@@ -48,13 +48,20 @@ runBot confFile = do
     conf <- Conf.load [Conf.Required confFile]
     username <- Conf.lookupDefault "" conf "userName"
 
+    twInfo <- getTWInfoFromEnv conf
+
     -- TODO: Remove.
     maybeUid <- liftIO $ fmap (listToMaybe . T.split (== '-')) (Conf.lookupDefault "" conf "accessToken")
+    -- Just userId' <- ...?
     let userId' = fmap (read . T.unpack) maybeUid
     when (isNothing userId') $ error "accessToken must contain a '-'"
-    let lenv = LtxbotEnv $ fromJust userId'
 
-    T.putStrLn $ T.unwords ["Listening for Tweets to", username, "..."]
-    runTwitterFromEnv' conf $ do
-        src <- stream $ statusesFilterByTrack $ T.concat ["@", username]
-        src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act ((`runReaderT` lenv) . actTL))
+    withManager $ \mngr -> do
+        T.putStrLn $ T.unwords ["Listening for Tweets to", username, "..."]
+
+        let lenv = LtxbotEnv { userId = fromJust userId'
+                             , twInfo = twInfo
+                             , mngr = mngr }
+        runTwitterFromEnv' conf $ do
+            src <- stream . statusesFilterByTrack $ T.concat ["@", username]
+            src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act ((`runReaderT` lenv) . actTL))
