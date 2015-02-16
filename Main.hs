@@ -4,6 +4,7 @@ module Main where
 import Prelude
 
 import Control.Lens
+import Control.Lens.Action
 import Control.Monad (when)
 import Control.Monad.Trans.Reader (runReaderT)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
@@ -22,6 +23,7 @@ import qualified Data.Conduit.List as CL
 import qualified Data.Configurator as Conf
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
+import qualified Network.HTTP.Conduit as HTTP
 import qualified System.Console.CmdArgs.Implicit as CA
 
 data Ltxbot = Ltxbot { config :: FilePath }
@@ -56,12 +58,12 @@ runBot confFile = do
     let userId' = fmap (read . T.unpack) maybeUid
     when (isNothing userId') $ error "accessToken must contain a '-'"
 
-    withManager $ \mngr -> do
+    HTTP.withManager $ \mngr -> do
         T.putStrLn $ T.unwords ["Listening for Tweets to", username, "..."]
 
-        let lenv = LtxbotEnv { userId = fromJust userId'
-                             , twInfo = twInfo
-                             , mngr = mngr }
+        let lenv = LtxbotEnv { ltxeUserId = fromJust userId'
+                             , ltxeTwInfo = twInfo
+                             , ltxeMngr = mngr }
         runTwitterFromEnv' conf $ do
             src <- stream . statusesFilterByTrack $ T.concat ["@", username]
             src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act ((`runReaderT` lenv) . actTL))

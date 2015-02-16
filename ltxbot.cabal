@@ -26,6 +26,7 @@ executable ltxbot
                      , filepath
                      , http-conduit >= 2.0
                      , lens >= 4.0
+                     , lens-action
                      , monad-logger
                      , mtl
                      , network-uri
@@ -62,6 +63,7 @@ test-suite spec_main
                      , containers
                      , case-insensitive
                      , lens >=4.0
+                     , lens-action
                      , transformers-base
                      , monad-logger
                      , authenticate-oauth >=1.4
