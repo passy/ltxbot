@@ -13,7 +13,7 @@ cabal-version:       >=1.10
 executable ltxbot
   main-is:             Main.hs
   other-extensions:    OverloadedStrings, RecordWildCards
-  build-depends:       base >=4.7 && <4.8
+  build-depends:       base ==4.*
                      , HaTeX
                      , authenticate-oauth >=1.4
                      , bytestring >=0.10
@@ -25,14 +25,14 @@ executable ltxbot
                      , exceptions >= 0.5
                      , filepath
                      , http-conduit >= 2.0
-                     , lens
+                     , lens>=4.0 && <4.4
                      , monad-logger
                      , mtl
                      , network-uri
                      , process
                      , resourcet >= 0.4
                      , temporary
-                     , text >= 1.1 && < 1.2
+                     , text >= 1.1
                      , transformers >= 0.3
                      , transformers-base
                      , twitter-conduit >= 0.0.6 && < 0.1.0
@@ -52,7 +52,7 @@ test-suite spec_main
   hs-source-dirs:      Tests, .
   main-is:             Main.hs
   default-language:    Haskell2010
-  build-depends:       base >=4.7 && <4.8
+  build-depends:       base ==4.*
                      , twitter-conduit >= 0.0.6 && < 0.1.0
                      , twitter-types == 0.6.1
                      , twitter-types-lens
@@ -61,7 +61,7 @@ test-suite spec_main
                      , network-uri
                      , containers
                      , case-insensitive
-                     , lens
+                     , lens>=4.0 && <4.4
                      , transformers-base
                      , monad-logger
                      , authenticate-oauth >=1.4
@@ -71,7 +71,7 @@ test-suite spec_main
                      , exceptions >= 0.5
                      , http-conduit >= 2.0
                      , resourcet >= 0.4
-                     , text >= 1.1 && < 1.2
+                     , text >= 1.1
                      , transformers >= 0.3
                      , temporary
                      , filepath
