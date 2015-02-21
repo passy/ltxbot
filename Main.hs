@@ -59,11 +59,13 @@ runBot confFile = do
     when (isNothing userId') $ error "accessToken must contain a '-'"
 
     HTTP.withManager $ \mngr -> do
-        T.putStrLn $ T.unwords ["Listening for Tweets to", username, "..."]
+        liftIO . T.putStrLn $ T.unwords ["Listening for Tweets to", username, "..."]
 
         let lenv = LtxbotEnv { ltxeUserId = fromJust userId'
                              , ltxeTwInfo = twInfo
                              , ltxeMngr = mngr }
-        runTwitterFromEnv' conf $ do
-            src <- stream . statusesFilterByTrack $ T.concat ["@", username]
-            src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act ((`runReaderT` lenv) . actTL))
+
+        src <- stream twInfo mngr (statusesFilterByTrack $ T.concat ["@", username])
+        return ()
+        -- src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act ((`runReaderT` lenv) . actTL))
+    return ()
