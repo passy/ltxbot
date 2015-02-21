@@ -25,7 +25,8 @@ executable ltxbot
                      , exceptions >= 0.5
                      , filepath
                      , http-conduit >= 2.0
-                     , lens>=4.0 && <4.4
+                     , lens >= 4.0
+                     , lens-action
                      , monad-logger
                      , mtl
                      , network-uri
@@ -35,9 +36,11 @@ executable ltxbot
                      , text >= 1.1
                      , transformers >= 0.3
                      , transformers-base
-                     , twitter-conduit >= 0.0.6 && < 0.1.0
-                     , twitter-types == 0.6.1
+                     , twitter-conduit
+                     , twitter-types
                      , twitter-types-lens
+                     , aeson
+                     , time
   default-language:    Haskell2010
   Ghc-options:         -Wall
                        -fwarn-tabs
@@ -53,15 +56,16 @@ test-suite spec_main
   main-is:             Main.hs
   default-language:    Haskell2010
   build-depends:       base ==4.*
-                     , twitter-conduit >= 0.0.6 && < 0.1.0
-                     , twitter-types == 0.6.1
+                     , twitter-conduit
+                     , twitter-types
                      , twitter-types-lens
                      , HaTeX
                      , mtl
                      , network-uri
                      , containers
                      , case-insensitive
-                     , lens>=4.0 && <4.4
+                     , lens >=4.0
+                     , lens-action
                      , transformers-base
                      , monad-logger
                      , authenticate-oauth >=1.4
@@ -77,3 +81,5 @@ test-suite spec_main
                      , filepath
                      , process
                      , hspec
+                     , time
+                     , aeson

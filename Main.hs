@@ -3,7 +3,7 @@ module Main where
 
 import Prelude
 
-import Control.Lens
+import Control.Lens.Action
 import Control.Monad (when)
 import Control.Monad.Trans.Reader (runReaderT)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
@@ -15,13 +15,14 @@ import Paths_ltxbot (version)
 import System.Console.CmdArgs.Explicit (HelpFormat(..), helpText)
 import Web.Twitter.Conduit (stream, statusesFilterByTrack)
 import Web.Twitter.LtxBot (actTL, normalizeMentions)
-import Web.Twitter.LtxBot.Common (runTwitterFromEnv', LtxbotEnv(..))
+import Web.Twitter.LtxBot.Common (getTWInfoFromEnv, LtxbotEnv(..))
 
 import qualified Data.Conduit as C
 import qualified Data.Conduit.List as CL
 import qualified Data.Configurator as Conf
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
+import qualified Network.HTTP.Conduit as HTTP
 import qualified System.Console.CmdArgs.Implicit as CA
 
 data Ltxbot = Ltxbot { config :: FilePath }
@@ -48,13 +49,21 @@ runBot confFile = do
     conf <- Conf.load [Conf.Required confFile]
     username <- Conf.lookupDefault "" conf "userName"
 
+    twInfo <- getTWInfoFromEnv conf
+
     -- TODO: Remove.
     maybeUid <- liftIO $ fmap (listToMaybe . T.split (== '-')) (Conf.lookupDefault "" conf "accessToken")
+    -- Just userId' <- ...?
     let userId' = fmap (read . T.unpack) maybeUid
     when (isNothing userId') $ error "accessToken must contain a '-'"
-    let lenv = LtxbotEnv $ fromJust userId'
 
-    T.putStrLn $ T.unwords ["Listening for Tweets to", username, "..."]
-    runTwitterFromEnv' conf $ do
-        src <- stream $ statusesFilterByTrack $ T.concat ["@", username]
+    HTTP.withManager $ \mngr -> do
+        liftIO . T.putStrLn $ T.unwords ["Listening for Tweets to", username, "..."]
+
+        let lenv = LtxbotEnv { ltxeUserId = fromJust userId'
+                             , ltxeTwInfo = twInfo
+                             , ltxeMngr = mngr }
+
+        src <- stream twInfo mngr (statusesFilterByTrack $ T.concat ["@", username])
         src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act ((`runReaderT` lenv) . actTL))
+    return ()

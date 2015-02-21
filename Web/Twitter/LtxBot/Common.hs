@@ -10,24 +10,20 @@ import qualified Web.Authenticate.OAuth as OA
 
 import Control.Applicative ((<$>), (<|>), (<*>))
 import Control.Lens
-import Control.Monad.Base (liftBase)
-import Control.Monad.IO.Class (MonadIO)
-import Control.Monad.Logger (NoLoggingT, runNoLoggingT)
 import Control.Monad.Reader (ReaderT)
-import Control.Monad.Trans.Resource (ResourceT, MonadBaseControl)
 import Data.Configurator.Types (Config)
-import Network.HTTP.Conduit (Proxy(..))
+import Network.HTTP.Conduit (Proxy(..), Manager)
 import System.Environment (getEnvironment)
 import Web.Authenticate.OAuth (OAuth(..), Credential, newOAuth, newCredential)
-import Web.Twitter.Conduit (TW, setCredential, twProxy, runTW)
+import Web.Twitter.Conduit (setCredential, twProxy, TWInfo)
 import Web.Twitter.Types (UserId)
+import Data.Monoid ((<>))
 
-data LtxbotEnv = LtxbotEnv { userId :: UserId }
-    deriving (Show)
+data LtxbotEnv = LtxbotEnv { ltxeUserId :: UserId
+                           , ltxeTwInfo :: TWInfo
+                           , ltxeMngr   :: Manager }
 
--- | My Reader thingy to pass around the environment implicitly,
---   the same way the Conduit TW env is used, but wrapping it.
-type LTXE m = ReaderT LtxbotEnv (TW m)
+type LTXE m = ReaderT LtxbotEnv m
 
 getProxyEnv :: IO (Maybe Proxy)
 getProxyEnv = do
@@ -40,7 +36,7 @@ getProxyEnv = do
     parsePort :: String -> Int
     parsePort []       = 8080
     parsePort (':':xs) = read xs
-    parsePort xs       = error $ "port number parse failed " ++ xs
+    parsePort xs       = error $ "port number parse failed " <> xs
 
 getOAuthTokens ::
     Config ->
@@ -64,20 +60,8 @@ getOAuthTokens conf = do
             secret <- Conf.lookupDefault "" conf "accessSecret"
             return $ newCredential token secret
 
-runTwitterFromEnv ::
-    (MonadIO m, MonadBaseControl IO m) =>
-    Config ->
-    TW (ResourceT m) a ->
-    m a
-runTwitterFromEnv conf task = do
-    pr <- liftBase getProxyEnv
-    (oa, cred) <- liftBase $ getOAuthTokens conf
-    let tenv = (setCredential oa cred OA.def) { twProxy = pr }
-    runTW tenv task
-
-runTwitterFromEnv' ::
-    (MonadIO m, MonadBaseControl IO m) =>
-    Config ->
-    TW (ResourceT (NoLoggingT m)) a ->
-    m a
-runTwitterFromEnv' = (runNoLoggingT .) . runTwitterFromEnv
+getTWInfoFromEnv :: Config -> IO TWInfo
+getTWInfoFromEnv conf = do
+    pr <- getProxyEnv
+    (oa, cred) <- getOAuthTokens conf
+    return $ (setCredential oa cred OA.def) { twProxy = pr }
