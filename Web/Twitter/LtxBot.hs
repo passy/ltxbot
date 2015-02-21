@@ -15,7 +15,6 @@ import Control.Monad (join)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Catch (MonadCatch, MonadMask)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
-import Control.Monad.Logger (MonadLogger)
 import Control.Monad.Trans.Resource (MonadResource)
 import Control.Monad.Reader.Class (asks)
 import Data.Maybe (maybeToList)
@@ -60,13 +59,13 @@ stripEntities i t =
         excludeRange = join [[x..y] | [x, y] <- i]
 
 actTL ::
-    (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>
+    (MonadResource m, MonadCatch m, MonadMask m) =>
     StreamingAPI ->
     LTXE m ()
 actTL (SStatus s) = actStatus s
 actTL _ = liftIO $ T.putStrLn "Other event"
 
-actStatus :: (MonadLogger m, MonadResource m, MonadCatch m, MonadMask m) =>
+actStatus :: (MonadResource m, MonadCatch m, MonadMask m) =>
     Status ->
     LTXE m ()
 actStatus s = do
@@ -94,7 +93,7 @@ showStatus s = T.concat [ s ^. TL.user . TL.userScreenName
                         ]
 
 replyStatusWithError ::
-    (MonadLogger m, MonadResource m) =>
+    (MonadResource m) =>
     Status ->
     LTXE m ()
 replyStatusWithError status = do
@@ -109,7 +108,7 @@ replyStatusWithError status = do
         updateCall = update statusString & inReplyToStatusId ?~ statusId status
 
 replyStatusWithImage ::
-    (MonadLogger m, MonadResource m) =>
+    (MonadResource m) =>
     UserId ->
     Status ->
     FilePath ->

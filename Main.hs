@@ -66,6 +66,5 @@ runBot confFile = do
                              , ltxeMngr = mngr }
 
         src <- stream twInfo mngr (statusesFilterByTrack $ T.concat ["@", username])
-        return ()
-        -- src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act ((`runReaderT` lenv) . actTL))
+        src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act ((`runReaderT` lenv) . actTL))
     return ()
