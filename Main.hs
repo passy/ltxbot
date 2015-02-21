@@ -5,8 +5,9 @@ import Prelude
 
 import Control.Lens.Action
 import Control.Monad (when)
-import Control.Monad.Trans.Reader (runReaderT)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
+import Control.Monad.Trans.Reader (runReaderT)
+import Data.Configurator.Types (Config)
 import Data.Data (Data)
 import Data.Maybe (listToMaybe, isNothing, fromJust)
 import Data.Typeable (Typeable)
@@ -16,6 +17,7 @@ import System.Console.CmdArgs.Explicit (HelpFormat(..), helpText)
 import Web.Twitter.Conduit (stream, statusesFilterByTrack)
 import Web.Twitter.LtxBot (actTL, normalizeMentions)
 import Web.Twitter.LtxBot.Common (getTWInfoFromEnv, LtxbotEnv(..))
+import Web.Twitter.Types (UserId)
 
 import qualified Data.Conduit as C
 import qualified Data.Conduit.List as CL
@@ -50,20 +52,22 @@ runBot confFile = do
     username <- Conf.lookupDefault "" conf "userName"
 
     twInfo <- getTWInfoFromEnv conf
-
-    -- TODO: Remove.
-    maybeUid <- liftIO $ fmap (listToMaybe . T.split (== '-')) (Conf.lookupDefault "" conf "accessToken")
-    -- Just userId' <- ...?
-    let userId' = fmap (read . T.unpack) maybeUid
-    when (isNothing userId') $ error "accessToken must contain a '-'"
+    userId <- getUserId conf
+    when (isNothing userId) $ error "accessToken must contain a '-'"
 
     HTTP.withManager $ \mngr -> do
         liftIO . T.putStrLn $ T.unwords ["Listening for Tweets to", username, "..."]
 
-        let lenv = LtxbotEnv { ltxeUserId = fromJust userId'
+        let lenv = LtxbotEnv { ltxeUserId = fromJust userId
                              , ltxeTwInfo = twInfo
                              , ltxeMngr = mngr }
 
         src <- stream twInfo mngr (statusesFilterByTrack $ T.concat ["@", username])
         src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act ((`runReaderT` lenv) . actTL))
     return ()
+
+ where
+    getUserId :: Config -> IO (Maybe UserId)
+    getUserId conf = do
+        maybeUid <- liftIO $ fmap (listToMaybe . T.split (== '-')) (Conf.lookupDefault "" conf "accessToken")
+        return $ fmap (read . T.unpack) maybeUid
