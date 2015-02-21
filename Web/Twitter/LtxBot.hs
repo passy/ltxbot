@@ -81,7 +81,7 @@ actStatus s = do
 
         (status, _, _) <- liftIO $ readProcessWithExitCode "./docker-tex2png.sh" [tmpFile] content
         case status of
-            ExitSuccess -> replyStatusWithImage uid s tmpFile
+            ExitSuccess   -> replyStatusWithImage uid s tmpFile
             ExitFailure _ -> replyStatusWithError s)
 
 showStatus ::
@@ -112,7 +112,7 @@ replyStatusWithError status = do
     where
         errorMessage = "Sorry, I could not compile your LaTeX, friend."
         statusString = T.unwords [T.concat ["@", status ^. TL.user . TL.userScreenName], errorMessage]
-        updateCall = update statusString & inReplyToStatusId ?~ statusId status
+        updateCall   = update statusString & inReplyToStatusId ?~ statusId status
 
 replyStatusWithImage ::
     (MonadResource m) =>
@@ -125,18 +125,18 @@ replyStatusWithImage uid status filepath = do
     res <- call' updateCall
     liftIO $ print res
     where
-        allMentions = extractStatusMentions status
-        otherMentions = filter (\u -> TT.userEntityUserId u /= uid) allMentions
+        allMentions    = extractStatusMentions status
+        otherMentions  = filter (\u -> TT.userEntityUserId u /= uid) allMentions
         mentionsString = T.unwords $ (\m -> T.concat ["@", m ^. TL.userEntityUserScreenName]) <$> otherMentions
-        statusString = T.unwords [T.concat ["@", status ^. TL.user . TL.userScreenName], mentionsString]
-        media = MediaFromFile filepath
-        updateCall = updateWithMedia statusString media & inReplyToStatusId ?~ statusId status
+        statusString   = T.unwords [T.concat ["@", status ^. TL.user . TL.userScreenName], mentionsString]
+        media          = MediaFromFile filepath
+        updateCall     = updateWithMedia statusString media & inReplyToStatusId ?~ statusId status
 
 extractStatusMentions :: Status -> [TL.UserEntity]
 extractStatusMentions s = do
     -- Should be obvious that this needs to be refactored ...
     -- I'm sure there's a way to do all of this in a single combined
     -- lens operation
-    let ues = s ^. TL.statusEntities >>= (^? TL.enUserMentions)
+    let ues      = s ^. TL.statusEntities >>= (^? TL.enUserMentions)
     let mentions = fmap (fmap (^. TL.entityBody)) ues
     join $ maybeToList mentions
