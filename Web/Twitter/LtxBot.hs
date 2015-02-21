@@ -9,6 +9,7 @@ import qualified Data.Text.IO as T
 import qualified Web.Twitter.Types.Lens as TL
 import qualified Web.Twitter.Types as TT
 
+import Data.Aeson (FromJSON)
 import Control.Applicative ((<$>))
 import Control.Lens
 import Control.Monad (join)
@@ -22,7 +23,7 @@ import System.Exit (ExitCode(ExitSuccess, ExitFailure))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempFile)
 import System.Process (readProcessWithExitCode)
-import Web.Twitter.Conduit (MediaData(..), updateWithMedia, call, inReplyToStatusId, update)
+import Web.Twitter.Conduit (MediaData(..), APIRequest, updateWithMedia, call, inReplyToStatusId, update)
 import Web.Twitter.LtxBot.Latex (renderLaTeXStatus)
 import Web.Twitter.LtxBot.Common (LTXE, LtxbotEnv(..))
 import Web.Twitter.Types (StreamingAPI(..), Status(..), UserId)
@@ -92,15 +93,21 @@ showStatus s = T.concat [ s ^. TL.user . TL.userScreenName
                         , s ^. TL.text
                         ]
 
+call' ::
+    (MonadResource m, FromJSON responseType) =>
+     APIRequest apiName responseType ->
+     LTXE m responseType
+call' request = do
+    twInfo <- asks ltxeTwInfo
+    mngr <- asks ltxeMngr
+    lift $ call twInfo mngr request
+
 replyStatusWithError ::
     (MonadResource m) =>
     Status ->
     LTXE m ()
 replyStatusWithError status = do
-    -- TODO: Make a wrapper for this that is less ugly.
-    twInfo <- asks ltxeTwInfo
-    mngr <- asks ltxeMngr
-    res <- lift $ call twInfo mngr updateCall
+    res <- call' updateCall
     liftIO $ print res
     where
         errorMessage = "Sorry, I could not compile your LaTeX, friend."
@@ -115,9 +122,7 @@ replyStatusWithImage ::
     LTXE m ()
 replyStatusWithImage uid status filepath = do
     -- TODO: Do something with res, don't return ()
-    twInfo <- asks ltxeTwInfo
-    mngr <- asks ltxeMngr
-    res <- lift $ call twInfo mngr updateCall
+    res <- call' updateCall
     liftIO $ print res
     where
         allMentions = extractStatusMentions status

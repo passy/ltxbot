@@ -3,7 +3,6 @@ module Main where
 
 import Prelude
 
-import Control.Lens
 import Control.Lens.Action
 import Control.Monad (when)
 import Control.Monad.Trans.Reader (runReaderT)
