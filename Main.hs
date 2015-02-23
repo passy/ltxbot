@@ -4,7 +4,7 @@ module Main where
 import Prelude
 
 import Control.Lens.Action
-import Control.Monad (when)
+import Control.Monad (when, void)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Control.Monad.Trans.Reader (runReaderT)
 import Data.Configurator.Types (Config)
@@ -57,16 +57,18 @@ runBot confFile = do
     userId <- getUserId conf
     when (isNothing userId) $ error "accessToken must contain a '-'"
 
-    HTTP.withManager $ \mngr -> do
+    void . HTTP.withManager $ \mngr -> do
         liftIO . T.putStrLn $ T.unwords ["Listening for Tweets to", username, "..."]
 
+        -- TODO: This should not be created here but in Common, but
+        -- that requires that we can pull the reader evaluation up, the lenv
+        -- must not appear in the equation down there.
         let lenv = [R.r| { userId = fromJust userId
                          , twInfo = twInfo
                          , manager = mngr } |] :: LtxbotEnv
 
         src <- stream twInfo mngr (statusesFilterByTrack $ T.concat ["@", username])
         src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act ((`runReaderT` lenv) . actTL))
-    return ()
 
  where
     getUserId :: Config -> IO (Maybe UserId)
