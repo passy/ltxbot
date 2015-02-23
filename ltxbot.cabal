@@ -21,7 +21,11 @@ source-repository head
 
 executable ltxbot
   main-is:             Main.hs
-  other-extensions:    OverloadedStrings, RecordWildCards
+  other-extensions:    OverloadedStrings
+                     , RecordWildCards
+                     , QuasiQuotes
+                     , FlexibleContexts
+                     , DeriveDataTypeable
   build-depends:       base ==4.*
                      , HaTeX
                      , authenticate-oauth >=1.4
@@ -50,6 +54,7 @@ executable ltxbot
                      , twitter-types-lens
                      , aeson
                      , time
+                     , record
   default-language:    Haskell2010
   Ghc-options:         -Wall
                        -fwarn-tabs
@@ -92,3 +97,4 @@ test-suite spec_main
                      , hspec
                      , time
                      , aeson
+                     , record

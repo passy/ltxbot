@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, FlexibleContexts, DeriveDataTypeable #-}
+{-# LANGUAGE OverloadedStrings, FlexibleContexts, DeriveDataTypeable, QuasiQuotes #-}
 module Main where
 
 import Prelude
@@ -16,7 +16,8 @@ import Paths_ltxbot (version)
 import System.Console.CmdArgs.Explicit (HelpFormat(..), helpText)
 import Web.Twitter.Conduit (stream, statusesFilterByTrack)
 import Web.Twitter.LtxBot (actTL, normalizeMentions)
-import Web.Twitter.LtxBot.Common (getTWInfoFromEnv, LtxbotEnv(..))
+import Web.Twitter.LtxBot.Common (getTWInfoFromEnv)
+import Web.Twitter.LtxBot.Types (LtxbotEnv)
 import Web.Twitter.Types (UserId)
 
 import qualified Data.Conduit as C
@@ -25,6 +26,7 @@ import qualified Data.Configurator as Conf
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Network.HTTP.Conduit as HTTP
+import qualified Record as R
 import qualified System.Console.CmdArgs.Implicit as CA
 
 data Ltxbot = Ltxbot { config :: FilePath }
@@ -58,9 +60,9 @@ runBot confFile = do
     HTTP.withManager $ \mngr -> do
         liftIO . T.putStrLn $ T.unwords ["Listening for Tweets to", username, "..."]
 
-        let lenv = LtxbotEnv { ltxeUserId = fromJust userId
-                             , ltxeTwInfo = twInfo
-                             , ltxeMngr = mngr }
+        let lenv = [R.r| { userId = fromJust userId
+                         , twInfo = twInfo
+                         , manager = mngr } |] :: LtxbotEnv
 
         src <- stream twInfo mngr (statusesFilterByTrack $ T.concat ["@", username])
         src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act ((`runReaderT` lenv) . actTL))

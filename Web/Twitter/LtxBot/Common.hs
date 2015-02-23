@@ -10,20 +10,12 @@ import qualified Web.Authenticate.OAuth as OA
 
 import Control.Applicative ((<$>), (<|>), (<*>))
 import Control.Lens
-import Control.Monad.Reader (ReaderT)
 import Data.Configurator.Types (Config)
-import Network.HTTP.Conduit (Proxy(..), Manager)
+import Network.HTTP.Conduit (Proxy(..))
 import System.Environment (getEnvironment)
 import Web.Authenticate.OAuth (OAuth(..), Credential, newOAuth, newCredential)
 import Web.Twitter.Conduit (setCredential, twProxy, TWInfo)
-import Web.Twitter.Types (UserId)
 import Data.Monoid ((<>))
-
-data LtxbotEnv = LtxbotEnv { ltxeUserId :: UserId
-                           , ltxeTwInfo :: TWInfo
-                           , ltxeMngr   :: Manager }
-
-type LTXE m = ReaderT LtxbotEnv m
 
 getProxyEnv :: IO (Maybe Proxy)
 getProxyEnv = do
