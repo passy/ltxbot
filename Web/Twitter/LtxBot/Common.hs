@@ -17,7 +17,8 @@ import Web.Authenticate.OAuth (OAuth(..), Credential, newOAuth, newCredential)
 import Web.Twitter.Conduit (setCredential, twProxy, TWInfo)
 import Data.Monoid ((<>))
 
-getProxyEnv :: IO (Maybe Proxy)
+getProxyEnv ::
+    IO (Maybe Proxy)
 getProxyEnv = do
     env <- M.fromList . over (mapped . _1) CI.mk <$> getEnvironment
     let u = M.lookup "https_proxy" env <|>
@@ -52,7 +53,9 @@ getOAuthTokens conf = do
             secret <- Conf.lookupDefault "" conf "accessSecret"
             return $ newCredential token secret
 
-getTWInfoFromEnv :: Config -> IO TWInfo
+getTWInfoFromEnv ::
+    Config ->
+    IO TWInfo
 getTWInfoFromEnv conf = do
     pr <- getProxyEnv
     (oa, cred) <- getOAuthTokens conf
