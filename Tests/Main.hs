@@ -16,7 +16,7 @@ main = hspec $ do
     describe "extractStatusMentions" $ do
         it "should extract all mentions" $ do
           let mentions = extractStatusMentions testStatus
-          let screenNames = (^. TLuserEntityUserScreenName) <$> mentions
+          let screenNames = (^. TL.userEntityUserScreenName) <$> mentions
 
           screenNames `shouldBe` ["ltxbot", "passy"]
 
