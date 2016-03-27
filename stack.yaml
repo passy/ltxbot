@@ -1,8 +1,4 @@
 flags: {}
 packages:
 - '.'
-extra-deps:
-- basic-lens-0.0.0
-- record-0.4.0.2
-- text-1.2.2.1
 resolver: lts-5.9
