@@ -1,4 +1,4 @@
-# ltxbot [![Build Status](https://travis-ci.org/passy/ltxbot.svg)](https://travis-ci.org/passy/ltxbot)
+# ltxbot [![Build Status](https://travis-ci.org/passy/ltxbot.svg?branch=master)](https://travis-ci.org/passy/ltxbot)
 
 A Twitter bot rendering mentions to PNGs.
 
