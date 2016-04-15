@@ -24,9 +24,9 @@ $ # Pull my docker image with texlive-full and poppler-utils
 $ docker pull passy/texlive-poppler
 ```
 
-
 If you poor soul are on OS X, you need to set up a shared network drive
-with boot2docker:
+with boot2docker. (*N.B.* This may no longer be necessary. Luckily, the Docker
+integration is far less painful these days.)
 
 ```bash
 $ # Make a volume container (only need to do this once)
