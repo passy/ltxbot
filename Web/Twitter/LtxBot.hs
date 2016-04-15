@@ -8,7 +8,6 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Web.Twitter.Types.Lens as TL
 import qualified Web.Twitter.Types as TT
-import qualified Record as R
 
 import Data.Aeson (FromJSON)
 import Control.Applicative ((<$>))
@@ -26,7 +25,7 @@ import System.IO.Temp (withSystemTempFile)
 import System.Process (readProcessWithExitCode)
 import Web.Twitter.Conduit (MediaData(..), APIRequest, updateWithMedia, call, inReplyToStatusId, update)
 import Web.Twitter.LtxBot.Latex (renderLaTeXStatus)
-import Web.Twitter.LtxBot.Types (LTXE)
+import Web.Twitter.LtxBot.Types (LTXE, LtxbotEnv(..))
 import Web.Twitter.Types (StreamingAPI(..), Status(..), UserId)
 
 -- | Remove all mentions from StreamingAPI SStatus messages
@@ -71,7 +70,7 @@ actStatus :: (MonadResource m, MonadCatch m, MonadMask m) =>
     Status ->
     LTXE m ()
 actStatus s = do
-    uid <- asks $ view [R.l|userId|]
+    uid <- asks envUserId
     let content = T.unpack $ renderLaTeXStatus s
     withSystemTempFile "hatmp.png" (\ tmpFile tmpHandle -> do
         -- Yuck, this is mutable state, global mutable state even. Let's figure
@@ -99,8 +98,8 @@ call' ::
      APIRequest apiName responseType ->
      LTXE m responseType
 call' request = do
-    twInfo <- asks $ view [R.l|twInfo|]
-    mngr <- asks $ view [R.l|manager|]
+    twInfo <- asks envTwInfo
+    mngr <- asks envManager
     lift $ call twInfo mngr request
 
 replyStatusWithError ::

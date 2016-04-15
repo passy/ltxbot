@@ -1,9 +1,4 @@
 flags: {}
 packages:
 - '.'
-extra-deps:
-  - record-0.2.1
-  - twitter-conduit-0.1.0
-  - twitter-types-0.7.0
-  - twitter-types-lens-0.7.0
-resolver: lts-2.22
+resolver: lts-5.12

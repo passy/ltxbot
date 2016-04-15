@@ -54,7 +54,6 @@ executable ltxbot
                      , twitter-types-lens
                      , aeson
                      , time
-                     , record
   default-language:    Haskell2010
   Ghc-options:         -Wall
                        -fwarn-tabs
@@ -97,4 +96,3 @@ test-suite spec_main
                      , hspec
                      , time
                      , aeson
-                     , record
