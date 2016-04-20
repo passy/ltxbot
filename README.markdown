@@ -51,7 +51,8 @@ There's also a set of [Ansible](http://ansible.com) scripts available under
 ## Building
 
 ```bash
-$ cabal sandbox init
-$ cabal install -j --only-dependencies
-$ cabal run -- ltxbot.conf
+$ stack setup
+$ stack build
+$ stack test
+$ stack exec ltxbot -- ltxbot.conf
 ```
