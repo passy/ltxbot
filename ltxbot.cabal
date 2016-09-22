@@ -21,6 +21,10 @@ source-repository head
 
 executable ltxbot
   main-is:             Main.hs
+  other-modules:       Web.Twitter.LtxBot
+                       Web.Twitter.LtxBot.Common
+                       Web.Twitter.LtxBot.Latex
+                       Web.Twitter.LtxBot.Types
   other-extensions:    OverloadedStrings
                      , RecordWildCards
                      , QuasiQuotes

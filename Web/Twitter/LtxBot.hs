@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, FlexibleContexts, QuasiQuotes #-}
+{-# LANGUAGE OverloadedStrings, FlexibleContexts #-}
 module Web.Twitter.LtxBot where
 
 import Prelude
@@ -13,8 +13,7 @@ import Data.Aeson (FromJSON)
 import Control.Applicative ((<$>))
 import Control.Lens
 import Control.Monad (join)
-import Control.Monad.Trans.Class (lift)
-import Control.Monad.Catch (MonadCatch, MonadMask)
+import Control.Monad.Catch (MonadMask)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Control.Monad.Trans.Resource (MonadResource)
 import Control.Monad.Reader.Class (asks)
@@ -23,7 +22,8 @@ import System.Exit (ExitCode(ExitSuccess, ExitFailure))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempFile)
 import System.Process (readProcessWithExitCode)
-import Web.Twitter.Conduit (MediaData(..), APIRequest, updateWithMedia, call, inReplyToStatusId, update)
+import Web.Twitter.Conduit (MediaData(..), APIRequest, updateWithMedia, call, update)
+import Web.Twitter.Conduit.Parameters (inReplyToStatusId)
 import Web.Twitter.LtxBot.Latex (renderLaTeXStatus)
 import Web.Twitter.LtxBot.Types (LTXE, LtxbotEnv(..))
 import Web.Twitter.Types (StreamingAPI(..), Status(..), UserId)
@@ -60,13 +60,13 @@ stripEntities i t =
         excludeRange = join [[x..y] | [x, y] <- i]
 
 actTL ::
-    (MonadResource m, MonadCatch m, MonadMask m) =>
+    (MonadResource m, MonadMask m) =>
     StreamingAPI ->
     LTXE m ()
 actTL (SStatus s) = actStatus s
 actTL _ = liftIO $ T.putStrLn "Other event"
 
-actStatus :: (MonadResource m, MonadCatch m, MonadMask m) =>
+actStatus :: (MonadResource m, MonadMask m) =>
     Status ->
     LTXE m ()
 actStatus s = do
@@ -94,13 +94,13 @@ showStatus s = T.concat [ s ^. TL.user . TL.userScreenName
                         ]
 
 call' ::
-    (MonadResource m, FromJSON responseType) =>
+    (MonadIO m, MonadResource m, FromJSON responseType) =>
      APIRequest apiName responseType ->
      LTXE m responseType
 call' request = do
     twInfo <- asks envTwInfo
     mngr <- asks envManager
-    lift $ call twInfo mngr request
+    liftIO $ call twInfo mngr request
 
 replyStatusWithError ::
     (MonadResource m) =>
@@ -110,7 +110,9 @@ replyStatusWithError status = do
     res <- call' updateCall
     liftIO $ print res
     where
+        errorMessage :: T.Text
         errorMessage = "Sorry, I could not compile your LaTeX, friend."
+
         statusString = T.unwords [T.concat ["@", status ^. TL.user . TL.userScreenName], errorMessage]
         updateCall   = update statusString & inReplyToStatusId ?~ statusId status
 
