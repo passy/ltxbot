@@ -1,27 +1,28 @@
--- This file has been generated from package.yaml by hpack version 0.15.0.
+-- This file has been generated from package.yaml by hpack version 0.14.0.
 --
 -- see: https://github.com/sol/hpack
 
-name:                ltxbot
-version:             0.1.0
-synopsis:            Twitter Bot turning LaTeX tweets into PNGs
-description:         A Twitter bot that listens for mentions and replies with an image of the Tweet interpreted as LaTeX. The image is rendered in a Docker container that is spawned on every incoming mention. Possibly not race-condition-proof.
-homepage:            https://github.com/passy/ltxbot
-license:             MIT
-license-file:        LICENSE
-author:              Pascal Hartig
-maintainer:          Pascal Hartig <phartig@rdrei.net>
-category:            Web
-build-type:          Simple
-cabal-version:       >= 1.10
+name:           ltxbot
+version:        0.1.0
+synopsis:       Twitter Bot turning LaTeX tweets into PNGs
+description:    A Twitter bot that listens for mentions and replies with an image of the Tweet interpreted as LaTeX. The image is rendered in a Docker container that is spawned on every incoming mention. Possibly not race-condition-proof.
+category:       Web
+homepage:       https://github.com/passy/ltxbot
+author:         Pascal Hartig
+maintainer:     Pascal Hartig <phartig@rdrei.net>
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
 
 extra-source-files:
     README.markdown
     stack.yaml
 
-executable disruption-tracker
-  main-is: ./Main.hs
-  ghc-options: -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -threaded -rtsopts -with-rtsopts=-N -Wall
+library
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -Wall
   build-depends:
       base >= 4.7 && < 5
     , text
@@ -51,16 +52,55 @@ executable disruption-tracker
     , twitter-types-lens
     , aeson
     , time
-  other-modules:
+  exposed-modules:
       Web.Twitter.LtxBot
       Web.Twitter.LtxBot.Common
       Web.Twitter.LtxBot.Latex
       Web.Twitter.LtxBot.Types
+  other-modules:
+      Paths_ltxbot
+  default-language: Haskell2010
+
+executable disruption-tracker
+  main-is: Main.hs
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -threaded -rtsopts -with-rtsopts=-N -Wall
+  build-depends:
+      base >= 4.7 && < 5
+    , text
+    , ltxbot
+    , HaTeX
+    , authenticate-oauth >=1.4
+    , bytestring >=0.10
+    , case-insensitive
+    , cmdargs >= 0.10
+    , conduit >= 1.0
+    , configurator >= 0.2
+    , containers
+    , exceptions >= 0.5
+    , filepath
+    , http-conduit >= 2.0
+    , lens >= 4.0
+    , lens-action
+    , monad-logger
+    , mtl
+    , network-uri
+    , process
+    , resourcet >= 0.4
+    , temporary
+    , transformers >= 0.3
+    , transformers-base
+    , twitter-conduit
+    , twitter-types
+    , twitter-types-lens
+    , aeson
+    , time
   default-language: Haskell2010
 
 test-suite spec
   type: exitcode-stdio-1.0
-  main-is: Main.hs
+  main-is: Spec.hs
   hs-source-dirs:
       test
   ghc-options: -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind -threaded -rtsopts -with-rtsopts=-N
