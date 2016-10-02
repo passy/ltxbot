@@ -27,10 +27,8 @@ dependencies:
 
 tests:
   spec:
-    main: test/Main.hs
-    source-dirs:
-      - .
-      - test
+    main: Spec.hs
+    source-dirs: test
     ghc-options: -threaded -rtsopts -with-rtsopts=-N
     dependencies:
       - ltxbot
@@ -62,15 +60,54 @@ tests:
       - time
       - aeson
 
+library:
+  source-dirs: src
+  ghc-options:
+    - -Wall
+  dependencies:
+    - HaTeX
+    - authenticate-oauth >=1.4
+    - bytestring >=0.10
+    - case-insensitive
+    - cmdargs >= 0.10
+    - conduit >= 1.0
+    - configurator >= 0.2
+    - containers
+    - exceptions >= 0.5
+    - filepath
+    - http-conduit >= 2.0
+    - lens >= 4.0
+    - lens-action
+    - monad-logger
+    - mtl
+    - network-uri
+    - process
+    - resourcet >= 0.4
+    - temporary
+    - transformers >= 0.3
+    - transformers-base
+    - twitter-conduit
+    - twitter-types
+    - twitter-types-lens
+    - aeson
+    - time
+  exposed-modules:
+    - Web.Twitter.LtxBot
+    - Web.Twitter.LtxBot.Common
+    - Web.Twitter.LtxBot.Latex
+    - Web.Twitter.LtxBot.Types
+
 executables:
   disruption-tracker:
-    main: ./Main.hs
+    main: Main.hs
+    source-dirs: app
     ghc-options:
       - -threaded
       - -rtsopts
       - -with-rtsopts=-N
       - -Wall
     dependencies:
+      - ltxbot
       - HaTeX
       - authenticate-oauth >=1.4
       - bytestring >=0.10
@@ -97,8 +134,3 @@ executables:
       - twitter-types-lens
       - aeson
       - time
-    other-modules:
-      - Web.Twitter.LtxBot
-      - Web.Twitter.LtxBot.Common
-      - Web.Twitter.LtxBot.Latex
-      - Web.Twitter.LtxBot.Types
