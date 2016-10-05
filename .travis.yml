@@ -51,6 +51,8 @@ matrix:
 
   allow_failures:
   - env: BUILD=stack ARGS="--resolver nightly"
+  # OS X is too flaky at the moment.
+  - compiler: ": #stack 7.10.3 osx"
 
 before_install:
 # Using compiler above sets CC to an invalid value, so unset it
