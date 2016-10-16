@@ -7,6 +7,7 @@ import Control.Lens.Action
 import Control.Monad (when, void)
 import Control.Monad.IO.Class (liftIO, MonadIO(..))
 import Control.Monad.Trans.Reader (runReaderT)
+import Control.Monad.Trans.Resource (runResourceT)
 import Data.Configurator.Types (Config)
 import Data.Data (Data)
 import Data.Maybe (listToMaybe, isNothing, fromJust)
@@ -53,10 +54,11 @@ runBot confFile = do
     username <- Conf.lookupDefault "" conf "userName"
 
     twInfo <- getTWInfoFromEnv conf
+    manager <- HTTP.newManager HTTP.tlsManagerSettings
     userId <- getUserId conf
     when (isNothing userId) $ error "accessToken must contain a '-'"
 
-    void . HTTP.withManager $ \mngr -> do
+    void . runResourceT $ do
         liftIO . T.putStrLn $ T.unwords ["Listening for Tweets to", username, "..."]
 
         -- TODO: This should not be created here but in Common, but
@@ -64,9 +66,9 @@ runBot confFile = do
         -- must not appear in the equation down there.
         let lenv = LtxbotEnv { envUserId = fromJust userId
                              , envTwInfo = twInfo
-                             , envManager = mngr }
+                             , envManager = manager }
 
-        src <- stream twInfo mngr (statusesFilterByTrack $ T.concat ["@", username])
+        src <- stream twInfo manager (statusesFilterByTrack $ T.concat ["@", username])
         src C.$=+ normalizeMentions C.$$+- CL.mapM_ (^! act ((`runReaderT` lenv) . actTL))
 
  where
