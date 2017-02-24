@@ -1,4 +1,4 @@
--- This file has been generated from package.yaml by hpack version 0.14.0.
+-- This file has been generated from package.yaml by hpack version 0.15.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -47,7 +47,7 @@ library
     , temporary
     , transformers >= 0.3
     , transformers-base
-    , twitter-conduit
+    , twitter-conduit >= 0.2.1
     , twitter-types
     , twitter-types-lens
     , aeson
@@ -108,7 +108,7 @@ test-suite spec
       base >= 4.7 && < 5
     , text
     , ltxbot
-    , twitter-conduit
+    , twitter-conduit >= 0.2.1
     , twitter-types
     , twitter-types-lens
     , HaTeX

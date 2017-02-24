@@ -28,8 +28,8 @@ matrix:
   include:
   # The Stack builds. We can pass in arbitrary Stack arguments via the ARGS
   # variable, such as using --stack-yaml to point to a different file.
-  - env: BUILD=stack ARGS="--resolver lts-7"
-    compiler: ": #stack 7.10.3"
+  - env: BUILD=stack ARGS="--resolver lts-8"
+    compiler: ": #stack lts"
     addons: {apt: {packages: [ghc-7.10.3], sources: [hvr-ghc]}}
 
   # Nightly builds are allowed to fail
@@ -37,8 +37,8 @@ matrix:
     compiler: ": #stack nightly"
     addons: {apt: {packages: [libgmp-dev]}}
 
-  - env: BUILD=stack ARGS="--resolver lts-7"
-    compiler: ": #stack 7.10.3 osx"
+  - env: BUILD=stack ARGS="--resolver lts-8"
+    compiler: ": #stack lts osx"
     os: osx
 
   - env: BUILD=stack ARGS="--resolver nightly"
@@ -48,7 +48,7 @@ matrix:
   allow_failures:
   - env: BUILD=stack ARGS="--resolver nightly"
   # OS X is too flaky at the moment.
-  - compiler: ": #stack 7.10.3 osx"
+  - compiler: ": #stack lts osx"
 
 before_install:
 # Using compiler above sets CC to an invalid value, so unset it

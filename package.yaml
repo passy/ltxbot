@@ -32,7 +32,7 @@ tests:
     ghc-options: -threaded -rtsopts -with-rtsopts=-N
     dependencies:
       - ltxbot
-      - twitter-conduit
+      - twitter-conduit >= 0.2.1
       - twitter-types
       - twitter-types-lens
       - HaTeX
@@ -86,7 +86,7 @@ library:
     - temporary
     - transformers >= 0.3
     - transformers-base
-    - twitter-conduit
+    - twitter-conduit >= 0.2.1
     - twitter-types
     - twitter-types-lens
     - aeson
