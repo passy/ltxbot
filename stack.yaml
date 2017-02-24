@@ -1,4 +1,12 @@
 flags: {}
 packages:
 - '.'
-resolver: lts-7.4
+extra-deps:
+- attoparsec-conduit-1.1.0
+- failure-0.2.0.3
+- http-client-multipart-0.3.0.0
+- shakespeare-text-1.1.0
+- twitter-conduit-0.0.2
+- twitter-types-0.7.2.2
+- twitter-types-lens-0.7.2
+resolver: lts-8.0
