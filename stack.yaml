@@ -2,10 +2,7 @@ flags: {}
 packages:
 - '.'
 extra-deps:
-- http-client-0.4.31.2
-- http-client-tls-0.2.4.1
-- http-conduit-2.1.11
-- twitter-conduit-0.2.1
-- twitter-types-0.7.2.2
-- twitter-types-lens-0.7.2
-resolver: lts-8.0
+- twitter-conduit-0.3.0@sha256:67b68511fc19563ff4159ae37188ac3db7dbc6603d81f11c6f1c2dd8ec1f5bd8
+- twitter-types-0.8.0@sha256:926f5c6554dbd2f111ea1f08fed512cba8a4a665c33bab1fea4e72ca30e8e0b7
+- twitter-types-lens-0.8.1@sha256:84b48cdc4ba56ef3e01fd515d2c81f30970954bef8181ddfbfcd8b43f0f970cd
+resolver: lts-14.10

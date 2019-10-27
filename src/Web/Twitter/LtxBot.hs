@@ -30,7 +30,7 @@ import Web.Twitter.Types (StreamingAPI(..), Status(..), UserId)
 
 -- | Remove all mentions from StreamingAPI SStatus messages
 -- so that this bot doesn't have to deal with it further down the line.
-normalizeMentions :: (MonadIO m) => C.Conduit StreamingAPI m StreamingAPI
+normalizeMentions :: (MonadIO m) => C.ConduitT StreamingAPI StreamingAPI m ()
 normalizeMentions = C.awaitForever handleStream
     where
         handleStream (SStatus s) = do
@@ -43,7 +43,7 @@ normalizeMentions = C.awaitForever handleStream
                              . TL.entityIndices
             let newText = stripEntities mentions text
             C.yield $ SStatus (s & TL.statusText .~ newText)
-        handleStream s@_ = C.yield s
+        handleStream ss = C.yield ss
 
 -- | Strip the entities defined by the given indices.
 -- Indices have to be tuples of two, must be in order and most not overlap.
